@@ -421,6 +421,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'online', service: 'RakshAI Natural Disaster Backend', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🛡️ RakshAI Disaster Platform Backend running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
