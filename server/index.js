@@ -421,6 +421,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'online', service: 'RakshAI Natural Disaster Backend', timestamp: new Date().toISOString() });
 });
 
+
+app.get('/api/sos', (req, res) => {
+  res.json([{ id: 1, message: "SOS working" }]);
+});
+
+app.get('/api/relief', (req, res) => {
+  res.json([{ id: 1, message: "Relief working" }]);
+});
+
+app.get('/api/missing', (req, res) => {
+  res.json([{ id: 1, message: "Missing working" }]);
+});
+
+app.get('/api/damage', (req, res) => {
+  res.json([{ id: 1, message: "Damage working" }]);
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
