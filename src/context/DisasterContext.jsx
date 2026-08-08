@@ -1,3 +1,5 @@
+import { API_BASE } from "../config";
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const DisasterContext = createContext();
@@ -69,7 +71,7 @@ export const DisasterProvider = ({ children }) => {
   // Actions
   const createSOS = async (sosData) => {
     try {
-      const res = await fetch('/api/sos/create', {
+      const res = await fetch(`${API_BASE}/api/sos/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sosData)
@@ -120,7 +122,7 @@ export const DisasterProvider = ({ children }) => {
 
   const updateSOSStatus = async (id, status, assigned_to) => {
     try {
-      const res = await fetch('/api/sos/update', {
+      const res = await fetch(`${API_BASE}/api/sos/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status, assigned_to })
@@ -146,7 +148,7 @@ export const DisasterProvider = ({ children }) => {
 
   const createReliefRequest = async (data) => {
     try {
-      const res = await fetch('/api/relief/request', {
+      const res = await fetch(`${API_BASE}/api/relief/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -177,7 +179,7 @@ export const DisasterProvider = ({ children }) => {
 
   const updateReliefStatus = async (id, status, assigned_ngo) => {
     try {
-      const res = await fetch('/api/relief/update', {
+      const res = await fetch(`${API_BASE}/api/relief/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status, assigned_ngo })
@@ -195,7 +197,7 @@ export const DisasterProvider = ({ children }) => {
 
   const reportMissingPerson = async (data) => {
     try {
-      const res = await fetch('/api/missing/report', {
+      const res = await fetch(`${API_BASE}/api/missing/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -227,7 +229,7 @@ export const DisasterProvider = ({ children }) => {
 
   const triggerAIMatch = async (id) => {
     try {
-      const res = await fetch('/api/missing/update', {
+      const res = await fetch(`${API_BASE}/api/missing/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'Match Found' })
@@ -253,7 +255,7 @@ export const DisasterProvider = ({ children }) => {
 
   const reportDamage = async (data) => {
     try {
-      const res = await fetch('/api/damage/report', {
+      const res = await fetch(`${API_BASE}/api/damage/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

@@ -1,0 +1,1 @@
+export const API_BASE = "https://disaster-hack.onrender.com";
