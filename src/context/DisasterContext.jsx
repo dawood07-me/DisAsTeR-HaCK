@@ -1,5 +1,5 @@
 import { API_BASE } from "../config";
-
+console.log("API BASE:", API_BASE);
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const DisasterContext = createContext();
