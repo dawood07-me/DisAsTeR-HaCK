@@ -1,0 +1,547 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useDisaster } from '../context/DisasterContext';
+import { StatusBadge } from '../components/StatusBadge';
+import { 
+  UserX, 
+  Sparkles, 
+  MapPin, 
+  Plus, 
+  Search, 
+  Camera, 
+  CheckCircle2, 
+  X, 
+  Scan, 
+  Focus,
+  AlertCircle
+} from 'lucide-react';
+
+export const MissingPage = () => {
+  const { user } = useAuth();
+  const { missingPersons, reportMissingPerson, triggerAIMatch } = useDisaster();
+
+  // Report Modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [name, setName] = useState('');
+  const [age, setAge] = useState(24);
+  const [gender, setGender] = useState('Male');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [lastSeen, setLastSeen] = useState('Kaziranga Relief Camp Grid 4');
+  const [dateMissing, setDateMissing] = useState(new Date().toISOString().split('T')[0]);
+  const [contact, setContact] = useState('+91 98765 00112');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Facial Verification Camera Modal State
+  const [scanPerson, setScanPerson] = useState(null); // Person object being scanned
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [scanningStatus, setScanningStatus] = useState('idle'); // 'idle' | 'scanning' | 'matched'
+  const [matchResult, setMatchResult] = useState(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Open Facial Camera Scanner
+  const openCameraModal = async (person) => {
+    setScanPerson(person);
+    setScanningStatus('idle');
+    setMatchResult(null);
+    setCameraError(null);
+
+    // Try to open user webcam
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } 
+        });
+        streamRef.current = stream;
+        setCameraActive(true);
+      } else {
+        setCameraActive(false);
+        setCameraError('Webcam API unavailable in browser - Using Simulated Neural Camera HUD');
+      }
+    } catch (err) {
+      setCameraActive(false);
+      setCameraError('Camera Access: Simulated AI Vision HUD active');
+    }
+  };
+
+  // Attach stream to video tag when cameraActive becomes true
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraActive]);
+
+  // Close Camera Scanner & Stop Tracks
+  const closeCameraModal = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setScanPerson(null);
+    setCameraActive(false);
+    setScanningStatus('idle');
+    setMatchResult(null);
+  };
+
+  // Trigger Live Biometric Scan
+  const handlePerformFacialScan = async () => {
+    setScanningStatus('scanning');
+
+    // Simulate 2.5s deep neural facial feature matching
+    setTimeout(async () => {
+      if (scanPerson) {
+        await triggerAIMatch(scanPerson.id);
+        setScanningStatus('matched');
+        setMatchResult({
+          confidence: '96.4%',
+          landmarksDetected: 68,
+          facialMeshHash: '#8F9A-AI-' + Math.floor(1000 + Math.random() * 9000),
+          matchedCamp: 'Registered & Verified at Central Relief Camp Sector 2'
+        });
+      }
+    }, 2500);
+  };
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    await reportMissingPerson({
+      user_id: user?.id || 'u-cit-guest',
+      name,
+      age: Number(age),
+      gender,
+      photo_url: photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      last_seen: lastSeen,
+      date_missing: dateMissing,
+      contact,
+      description
+    });
+
+    setSubmitting(false);
+    setShowReportModal(false);
+  };
+
+  const filtered = missingPersons.filter(m => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.last_seen.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Header */}
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-xl bg-purple-950 text-purple-400 border border-purple-800 shadow-lg shadow-purple-950">
+              <UserX className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-white">MODULE 6: MISSING PERSONS REPOSITORY & AI CAMERA SCAN</h1>
+              <p className="text-xs text-slate-400">
+                Automated Live Camera Facial Detection & Relief Camp Biometric Cross-Referencing
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowReportModal(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-extrabold px-5 py-3 rounded-xl text-xs shadow-lg border border-purple-400/30 transition active:scale-95"
+        >
+          <Plus className="w-4 h-4" /> REPORT MISSING PERSON
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative glass-panel p-2 rounded-2xl border border-slate-800">
+        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by missing person's name or last seen location..."
+          className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+        />
+      </div>
+
+      {/* Report Modal Form */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-slate-900 border border-purple-500/40 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <h3 className="font-extrabold text-base text-white flex items-center gap-2">
+              <UserX className="w-5 h-5 text-purple-400" /> Report Missing Individual
+            </h3>
+
+            <form onSubmit={handleReportSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Ramesh Paul"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Age</label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Gender</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Last Seen Location</label>
+                <input
+                  type="text"
+                  required
+                  value={lastSeen}
+                  onChange={(e) => setLastSeen(e.target.value)}
+                  placeholder="e.g. Near Cachar District Bridge, Silchar"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Date Missing</label>
+                  <input
+                    type="date"
+                    value={dateMissing}
+                    onChange={(e) => setDateMissing(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Photo URL (Optional)</label>
+                <input
+                  type="url"
+                  value={photoUrl}
+                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Description / Clothing</label>
+                <textarea
+                  rows="2"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Height, clothing color, distinct marks..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold"
+                >
+                  Submit Report
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* AI CAMERA FACIAL RECOGNITION SCANNER MODAL */}
+      {scanPerson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-2xl bg-slate-900 border border-purple-500/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            
+            {/* Modal Header Bar */}
+            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 px-5 py-4 flex items-center justify-between border-b border-purple-500/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-700">
+                  <Camera className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white tracking-wide flex items-center gap-2">
+                    AI FACIAL RECOGNITION CAMERA SCANNER
+                    <span className="text-[10px] bg-purple-950 text-purple-300 px-2 py-0.5 rounded border border-purple-700">
+                      LIVE HUD
+                    </span>
+                  </h3>
+                  <p className="text-xs text-purple-300">
+                    Scanning against person record: <b className="text-white">{scanPerson.name}</b> ({scanPerson.id})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeCameraModal}
+                className="p-1.5 rounded-xl bg-purple-950 text-purple-300 hover:bg-purple-900 border border-purple-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content: Split Screen Camera View & Reference Photo */}
+            <div className="p-5 space-y-4">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Reference Photo Card */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-extrabold text-purple-400 tracking-wider mb-2 flex items-center justify-between">
+                      <span>REFERENCE REPOSITORY PHOTO</span>
+                      <span className="text-slate-400">{scanPerson.id}</span>
+                    </div>
+                    <div className="w-full h-48 rounded-xl overflow-hidden border border-purple-500/30 relative">
+                      <img 
+                        src={scanPerson.photo_url} 
+                        alt={scanPerson.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                      <div className="absolute inset-0 border-2 border-purple-500/40 pointer-events-none rounded-xl"></div>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-slate-300 pt-2">
+                    <div className="font-extrabold text-white text-sm">{scanPerson.name}</div>
+                    <div className="text-slate-400 text-[11px]">Age: {scanPerson.age} • Gender: {scanPerson.gender}</div>
+                    <div className="text-cyan-400 text-[11px] truncate">📍 {scanPerson.last_seen}</div>
+                  </div>
+                </div>
+
+                {/* Live Camera View Finder with HUD */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-purple-500/40 relative overflow-hidden flex flex-col justify-between">
+                  <div className="text-[10px] uppercase font-extrabold text-cyan-400 tracking-wider mb-2 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                      LIVE CAMERA STREAM (CAMERA FEED)
+                    </span>
+                    <Focus className="w-4 h-4 text-cyan-400" />
+                  </div>
+
+                  <div className="w-full h-48 bg-slate-900 rounded-xl overflow-hidden relative flex items-center justify-center border border-cyan-500/30">
+                    
+                    {/* Active Webcam element */}
+                    {cameraActive ? (
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        className="w-full h-full object-cover transform -scale-x-100" 
+                      />
+                    ) : (
+                      /* Simulated High-Tech Facial Scan HUD View */
+                      <div className="w-full h-full relative bg-slate-900 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={scanPerson.photo_url} 
+                          alt="Camera subject" 
+                          className="w-full h-full object-cover opacity-70 filter contrast-125 saturate-50"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-purple-950/40 to-transparent"></div>
+                      </div>
+                    )}
+
+                    {/* Facial Scanner Targeting Reticle HUD Overlay */}
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <div className={`w-36 h-44 border-2 rounded-2xl transition-all ${
+                        scanningStatus === 'matched' ? 'border-emerald-400 shadow-[0_0_20px_#10b981]' : 
+                        scanningStatus === 'scanning' ? 'border-amber-400 animate-pulse' : 'border-purple-400'
+                      } relative`}>
+                        
+                        {/* Target Corner Markers */}
+                        <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-cyan-400"></div>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-cyan-400"></div>
+                        <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-cyan-400"></div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-cyan-400"></div>
+
+                        {/* Animated Laser Scanning Line */}
+                        {scanningStatus === 'scanning' && (
+                          <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-bounce shadow-lg shadow-cyan-400"></div>
+                        )}
+
+                        {/* Facial Landmark Point Grid */}
+                        <div className="absolute inset-0 grid grid-cols-3 grid-rows-4 p-2 opacity-60">
+                          {[...Array(12)].map((_, i) => (
+                            <div key={i} className="flex items-center justify-center">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* HUD Status Bar overlay */}
+                    <div className="absolute bottom-2 left-2 right-2 bg-slate-950/90 backdrop-blur px-2.5 py-1.5 rounded-lg border border-slate-800 text-[10px] font-mono text-cyan-300 flex items-center justify-between">
+                      <span>FPS: 30 • 68 MESH POINTS</span>
+                      <span className="text-purple-400 font-bold">BIOMETRIC ENGAGED</span>
+                    </div>
+                  </div>
+
+                  {cameraError && (
+                    <div className="text-[10px] text-amber-300 mt-2 flex items-center gap-1 font-semibold">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                      {cameraError}
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+
+              {/* Match Results Display */}
+              {matchResult && (
+                <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/60 space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-black text-sm text-emerald-300">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      BIOMETRIC FACIAL MATCH CONFIRMED
+                    </div>
+                    <span className="text-xs font-black px-2.5 py-1 rounded bg-emerald-500 text-slate-950">
+                      {matchResult.confidence} MATCH
+                    </span>
+                  </div>
+                  <div className="text-xs text-emerald-200">
+                    <b>Camp Registry:</b> {matchResult.matchedCamp}
+                  </div>
+                  <div className="text-[11px] font-mono text-emerald-400/80">
+                    Vector Hash: {matchResult.facialMeshHash} • 68 Landmark Keypoints Matched
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <button
+                  onClick={closeCameraModal}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                >
+                  Close Scanner
+                </button>
+
+                {scanningStatus !== 'matched' && (
+                  <button
+                    onClick={handlePerformFacialScan}
+                    disabled={scanningStatus === 'scanning'}
+                    className="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 text-white font-black px-5 py-2.5 rounded-xl text-xs shadow-lg border border-purple-400/40 transition active:scale-95 disabled:opacity-50"
+                  >
+                    <Scan className={`w-4 h-4 ${scanningStatus === 'scanning' ? 'animate-spin' : ''}`} />
+                    {scanningStatus === 'scanning' ? 'PROCESSING NEURAL FACIAL MESH...' : 'CAPTURE & VERIFY FACIAL MATCH'}
+                  </button>
+                )}
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Grid of Missing Persons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map(person => (
+          <div key={person.id} className="glass-panel glass-panel-hover p-5 rounded-2xl border border-slate-800 space-y-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-black text-xs text-purple-400">{person.id}</span>
+                <StatusBadge status={person.status} />
+              </div>
+
+              <div className="flex gap-4 items-center">
+                <img
+                  src={person.photo_url}
+                  alt={person.name}
+                  className="w-20 h-20 rounded-2xl object-cover border border-purple-500/40 shadow-lg"
+                />
+                <div>
+                  <h3 className="font-extrabold text-base text-white">{person.name}</h3>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {person.age} Yrs • {person.gender}
+                  </div>
+                  <div className="text-[11px] text-cyan-400 font-medium flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3 text-red-400" /> {person.last_seen}
+                  </div>
+                </div>
+              </div>
+
+              {person.description && (
+                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 mt-3">
+                  "{person.description}"
+                </div>
+              )}
+
+              {person.match_confidence && (
+                <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-bold mt-2 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+                  <span>{person.match_confidence}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 space-y-2 text-xs text-slate-400">
+              <div className="flex justify-between items-center">
+                <span>Date: <b className="text-slate-300">{person.date_missing}</b></span>
+                <span>Contact: <b className="text-slate-200">{person.contact}</b></span>
+              </div>
+
+              {/* Camera Facial Scan Verification Trigger Button */}
+              <button
+                onClick={() => openCameraModal(person)}
+                className={`w-full py-2.5 rounded-xl font-extrabold text-xs shadow flex items-center justify-center gap-2 border transition ${
+                  person.status === 'Match Found' 
+                    ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 text-white border-purple-400/40'
+                }`}
+              >
+                <Camera className="w-4 h-4 text-cyan-300" /> 
+                {person.status === 'Match Found' ? 'RE-SCAN CAMERA FACIAL RECOGNITION' : 'OPEN CAMERA & VERIFY FACIAL MATCH'}
+              </button>
+            </div>
+
+          </div>
+        ))}
+      </div>
+
+    </div>
+  );
+};
