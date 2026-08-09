@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useDisaster } from '../context/DisasterContext';
 import { 
   ShieldAlert, 
   Bell, 
-  UserCheck, 
   Radio, 
   AlertOctagon, 
-  Check, 
   Clock, 
-  Menu,
-  ChevronDown
+  Menu
 } from 'lucide-react';
 
 export const Navbar = ({ onToggleMobileMenu }) => {
-  const { user, setRole } = useAuth();
   const { notifications, markNotificationsRead, setSosModalOpen } = useDisaster();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [timeString, setTimeString] = useState('');
 
   useEffect(() => {
@@ -31,13 +25,6 @@ export const Navbar = ({ onToggleMobileMenu }) => {
   }, []);
 
   const unreadCount = notifications.filter(n => n.unread).length;
-
-  const rolesList = [
-    { name: 'Citizen', desc: 'Report SOS, Missing & Damage', color: 'text-blue-400' },
-    { name: 'Rescue Team', desc: 'Dispatch & Rescues Dashboard', color: 'text-red-400' },
-    { name: 'Government Admin', desc: 'Full System Control & Metrics', color: 'text-amber-400' },
-    { name: 'NGO / Volunteer', desc: 'Relief Supply Delivery', color: 'text-emerald-400' }
-  ];
 
   return (
     <header className="sticky top-0 z-[9999] bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 lg:px-8 py-3">
@@ -79,8 +66,8 @@ export const Navbar = ({ onToggleMobileMenu }) => {
           </div>
         </div>
 
-        {/* Right Side: Action Controls & Role Switcher */}
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        {/* Right Side: Action Controls (SOS Button & Notifications Bell) */}
+        <div className="flex items-center gap-2 sm:gap-3">
 
           {/* Quick SOS Red Emergency Button */}
           <button
@@ -90,49 +77,6 @@ export const Navbar = ({ onToggleMobileMenu }) => {
             <AlertOctagon className="w-4 h-4 text-white animate-bounce" />
             <span>SOS</span>
           </button>
-
-          {/* Role Switcher Pill */}
-          <div className="relative">
-            <button
-              onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-              className="flex items-center gap-1.5 sm:gap-2 bg-slate-800/90 hover:bg-slate-700/80 text-slate-200 border border-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition"
-            >
-              <UserCheck className="w-4 h-4 text-cyan-400 shrink-0" />
-              <div className="text-left hidden md:block">
-                <span className="block text-[10px] text-slate-400 leading-tight">ACTIVE ROLE</span>
-                <span className="text-cyan-300 font-bold">{user?.role || 'Citizen'}</span>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {showRoleDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                  Switch Active Role (Demo)
-                </div>
-                <div className="space-y-1 mt-1">
-                  {rolesList.map(r => (
-                    <button
-                      key={r.name}
-                      onClick={() => {
-                        setRole(r.name);
-                        setShowRoleDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between hover:bg-slate-800 transition ${
-                        user?.role === r.name ? 'bg-cyan-950/60 border border-cyan-800/60' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className={`font-bold ${r.color}`}>{r.name}</div>
-                        <div className="text-[10px] text-slate-400">{r.desc}</div>
-                      </div>
-                      {user?.role === r.name && <Check className="w-4 h-4 text-cyan-400" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Notifications Bell */}
           <div className="relative">

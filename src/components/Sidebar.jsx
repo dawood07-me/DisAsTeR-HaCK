@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -12,11 +12,22 @@ import {
   Home, 
   ShieldCheck,
   LogOut,
+  UserCheck,
+  ChevronDown,
+  Check,
   X
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, setRole } = useAuth();
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+
+  const rolesList = [
+    { name: 'Citizen', desc: 'Report SOS, Missing & Damage', color: 'text-blue-400' },
+    { name: 'Rescue Team', desc: 'Dispatch & Rescues Dashboard', color: 'text-red-400' },
+    { name: 'Government Admin', desc: 'Full System Control & Metrics', color: 'text-amber-400' },
+    { name: 'NGO / Volunteer', desc: 'Relief Supply Delivery', color: 'text-emerald-400' }
+  ];
 
   const navItems = [
     { id: 'dashboard', label: 'Main Dashboard', icon: LayoutDashboard, role: 'All' },
@@ -53,13 +64,60 @@ export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) 
         </button>
       </div>
 
-      {/* Current User Card */}
-      <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
-        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">LOGGED IN AS</div>
-        <div className="font-bold text-slate-100 truncate text-sm">{user?.name || 'Citizen User'}</div>
-        <div className="text-xs text-cyan-400 font-medium flex items-center gap-1.5 mt-0.5">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          {currentRole}
+      {/* Current User Card & Highlighted Active Role Switcher */}
+      <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/80 shadow-md">
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">LOGGED IN USER</div>
+          <span className="text-[9px] font-extrabold bg-cyan-950 text-cyan-400 border border-cyan-800/80 px-1.5 py-0.5 rounded">
+            DEMO
+          </span>
+        </div>
+        
+        <div className="font-bold text-slate-100 truncate text-sm mt-0.5">{user?.name || 'Citizen User'}</div>
+        
+        {/* Highlighted Role Switcher Dropdown */}
+        <div className="mt-2.5 pt-2.5 border-t border-slate-700/80">
+          <div className="flex items-center justify-between text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider mb-1.5">
+            <span className="flex items-center gap-1">
+              <UserCheck className="w-3.5 h-3.5 text-cyan-400" /> Switch Active Role
+            </span>
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+              className="w-full flex items-center justify-between bg-slate-900/90 hover:bg-slate-950 text-cyan-300 border border-cyan-500/50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-inner"
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                <span className="truncate">{currentRole}</span>
+              </div>
+              <ChevronDown className={`w-3.5 h-3.5 text-cyan-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showRoleDropdown && (
+              <div className="mt-1.5 w-full bg-slate-900 border border-cyan-700/60 rounded-xl shadow-2xl p-1.5 space-y-1 z-50 animate-in fade-in slide-in-from-top-1">
+                {rolesList.map(r => (
+                  <button
+                    key={r.name}
+                    onClick={() => {
+                      setRole(r.name);
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex items-center justify-between transition ${
+                      currentRole === r.name ? 'bg-cyan-950/80 border border-cyan-700/80' : 'hover:bg-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className={`font-bold ${r.color}`}>{r.name}</div>
+                      <div className="text-[10px] text-slate-400">{r.desc}</div>
+                    </div>
+                    {currentRole === r.name && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
