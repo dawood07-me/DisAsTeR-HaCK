@@ -13,7 +13,9 @@ import {
   X, 
   Scan, 
   Focus,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Link as LinkIcon
 } from 'lucide-react';
 
 export const MissingPage = () => {
@@ -26,12 +28,28 @@ export const MissingPage = () => {
   const [age, setAge] = useState(24);
   const [gender, setGender] = useState('Male');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [useUrlInput, setUseUrlInput] = useState(false);
   const [lastSeen, setLastSeen] = useState('Kaziranga Relief Camp Grid 4');
   const [dateMissing, setDateMissing] = useState(new Date().toISOString().split('T')[0]);
   const [contact, setContact] = useState('+91 98765 00112');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file (PNG, JPG, WEBP)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Facial Verification Camera Modal State
   const [scanPerson, setScanPerson] = useState(null); // Person object being scanned
@@ -121,6 +139,9 @@ export const MissingPage = () => {
       description
     });
 
+    setName('');
+    setPhotoUrl('');
+    setDescription('');
     setSubmitting(false);
     setShowReportModal(false);
   };
@@ -247,15 +268,65 @@ export const MissingPage = () => {
                 </div>
               </div>
 
+              {/* Image Upload Input with File Selector & Preview */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Photo URL (Optional)</label>
-                <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-300 uppercase">
+                    Photograph of Person
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setUseUrlInput(!useUrlInput)}
+                    className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <LinkIcon className="w-3 h-3" />
+                    {useUrlInput ? 'Switch to Upload Image File' : 'Or Paste Web Image URL'}
+                  </button>
+                </div>
+
+                {useUrlInput ? (
+                  <input
+                    type="url"
+                    value={photoUrl}
+                    onChange={(e) => setPhotoUrl(e.target.value)}
+                    placeholder="Paste image URL (https://...)"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  />
+                ) : photoUrl ? (
+                  <div className="relative w-full h-40 rounded-xl overflow-hidden border border-purple-500/50 bg-slate-950 flex items-center justify-center group shadow-lg">
+                    <img
+                      src={photoUrl}
+                      alt="Uploaded Missing Person"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/75 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <label className="cursor-pointer px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg border border-purple-400/40 active:scale-95 transition">
+                        <Upload className="w-3.5 h-3.5" /> Replace File
+                        <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoUrl('')}
+                        className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg active:scale-95 transition"
+                      >
+                        <X className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-purple-500/40 hover:border-purple-400 rounded-xl cursor-pointer bg-purple-950/20 hover:bg-purple-950/40 transition-all p-3 text-center group">
+                    <div className="w-9 h-9 rounded-full bg-purple-900/60 text-purple-300 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform border border-purple-700/60 shadow">
+                      <Upload className="w-4 h-4 text-purple-300" />
+                    </div>
+                    <span className="text-xs font-extrabold text-white group-hover:text-purple-300 transition-colors">
+                      Click to Upload Image File
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">
+                      Supports JPG, PNG, WEBP from your computer/device
+                    </span>
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  </label>
+                )}
               </div>
 
               <div>
