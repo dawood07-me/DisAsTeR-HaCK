@@ -11,11 +11,12 @@ import {
   FileWarning, 
   Home, 
   ShieldCheck,
+  LogOut,
   X
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { id: 'dashboard', label: 'Main Dashboard', icon: LayoutDashboard, role: 'All' },
@@ -108,6 +109,25 @@ export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) 
           Floods • Cyclones • Tsunami • Heavy Rainfall • Landslides • Forest Fires
         </p>
       </div>
+
+      {/* Logout Action Button */}
+      {user && (
+        <button
+          onClick={() => {
+            if (onCloseMobile) onCloseMobile();
+            logout();
+          }}
+          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold text-xs text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/40 border border-red-900/40 transition-all group shrink-0"
+        >
+          <div className="flex items-center gap-2">
+            <LogOut className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+            <span>Log Out</span>
+          </div>
+          <span className="text-[9px] font-bold text-red-400 bg-red-950/60 px-1.5 py-0.5 rounded border border-red-900/50 uppercase tracking-wider">
+            Exit
+          </span>
+        </button>
+      )}
 
     </div>
   );

@@ -5,7 +5,6 @@ import {
   ShieldAlert, 
   Bell, 
   UserCheck, 
-  LogOut, 
   Radio, 
   AlertOctagon, 
   Check, 
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar = ({ onToggleMobileMenu }) => {
-  const { user, logout, setRole } = useAuth();
+  const { user, setRole } = useAuth();
   const { notifications, markNotificationsRead, setSosModalOpen } = useDisaster();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -153,7 +152,7 @@ export const Navbar = ({ onToggleMobileMenu }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-96 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 max-h-96 overflow-y-auto">
+              <div className="absolute right-0 mt-2 w-72 sm:w-96 max-w-[calc(100vw-2rem)] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 max-h-96 overflow-y-auto">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <Bell className="w-3.5 h-3.5 text-cyan-400" /> Emergency Alerts
@@ -188,17 +187,6 @@ export const Navbar = ({ onToggleMobileMenu }) => {
               </div>
             )}
           </div>
-
-          {/* Logout Button */}
-          {user && (
-            <button
-              onClick={logout}
-              title="Logout session"
-              className="p-2 rounded-xl bg-slate-800/60 hover:bg-red-950/40 text-slate-400 hover:text-red-400 border border-slate-700/80 transition"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          )}
 
         </div>
 
