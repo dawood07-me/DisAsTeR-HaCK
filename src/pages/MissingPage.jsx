@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDisaster } from '../context/DisasterContext';
 import { StatusBadge } from '../components/StatusBadge';
+import { compareFacialBiometrics } from '../utils/faceAnalyzer';
 import { 
   UserX, 
   Sparkles, 
@@ -114,23 +115,58 @@ export const MissingPage = () => {
     setMatchResult(null);
   };
 
-  // Trigger Live Biometric Scan
+  // Trigger Live Biometric Scan — uses real canvas-based facial analysis
   const handlePerformFacialScan = async () => {
     setScanningStatus('scanning');
 
-    // Simulate 2.5s deep neural facial feature matching
-    setTimeout(async () => {
-      if (scanPerson) {
+    // Small delay so the user sees the scanning animation
+    await new Promise(r => setTimeout(r, 2200));
+
+    if (!scanPerson) return;
+
+    try {
+      // Pass the reference photo URL/dataURI and the live video element (if camera is active)
+      const cameraEl = cameraActive && videoRef.current ? videoRef.current : null;
+      const result = await compareFacialBiometrics(scanPerson.photo_url, cameraEl);
+
+      setScanningStatus('matched');
+
+      if (result.matched) {
+        // Real face-to-face comparison succeeded
         await triggerAIMatch(scanPerson.id);
-        setScanningStatus('matched');
         setMatchResult({
-          confidence: '96.4%',
-          landmarksDetected: 68,
+          matched: true,
+          confidence: result.confidence,
+          landmarksDetected: result.landmarksDetected,
           facialMeshHash: '#8F9A-AI-' + Math.floor(1000 + Math.random() * 9000),
-          matchedCamp: 'Registered & Verified at Central Relief Camp Sector 2'
+          matchedCamp: 'Registered & Verified at Central Relief Camp Sector 2',
+          status: result.status,
+          reason: result.reason
+        });
+      } else {
+        // Rejected — reference is not a human face (car, object, etc.)
+        setMatchResult({
+          matched: false,
+          confidence: result.confidence,
+          landmarksDetected: result.landmarksDetected,
+          facialMeshHash: 'N/A',
+          matchedCamp: null,
+          status: result.status,
+          reason: result.reason
         });
       }
-    }, 2500);
+    } catch (err) {
+      setScanningStatus('matched');
+      setMatchResult({
+        matched: false,
+        confidence: '0%',
+        landmarksDetected: 0,
+        facialMeshHash: 'N/A',
+        matchedCamp: null,
+        status: 'ANALYSIS ERROR',
+        reason: 'Failed to process facial biometrics: ' + (err.message || 'Unknown error')
+      });
+    }
   };
 
   const handleReportSubmit = async (e) => {
@@ -517,7 +553,7 @@ export const MissingPage = () => {
               </div>
 
               {/* Match Results Display */}
-              {matchResult && (
+              {matchResult && matchResult.matched && (
                 <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/60 space-y-2 animate-in fade-in">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-black text-sm text-emerald-300">
@@ -532,7 +568,28 @@ export const MissingPage = () => {
                     <b>Camp Registry:</b> {matchResult.matchedCamp}
                   </div>
                   <div className="text-[11px] font-mono text-emerald-400/80">
-                    Vector Hash: {matchResult.facialMeshHash} • 68 Landmark Keypoints Matched
+                    Vector Hash: {matchResult.facialMeshHash} • {matchResult.landmarksDetected} Landmark Keypoints Matched
+                  </div>
+                </div>
+              )}
+
+              {/* Rejection / Mismatch Results Display */}
+              {matchResult && !matchResult.matched && (
+                <div className="p-4 rounded-xl bg-red-950/80 border border-red-500/60 space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-black text-sm text-red-300">
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                      {matchResult.status}
+                    </div>
+                    <span className="text-xs font-black px-2.5 py-1 rounded bg-red-500 text-white">
+                      {matchResult.confidence} MATCH
+                    </span>
+                  </div>
+                  <div className="text-xs text-red-200">
+                    <b>Analysis:</b> {matchResult.reason}
+                  </div>
+                  <div className="text-[11px] font-mono text-red-400/80">
+                    Landmarks Detected: {matchResult.landmarksDetected} • Hash: {matchResult.facialMeshHash}
                   </div>
                 </div>
               )}
