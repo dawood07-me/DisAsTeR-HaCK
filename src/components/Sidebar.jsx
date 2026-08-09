@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -21,6 +21,18 @@ import {
 export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) => {
   const { user, logout, setRole } = useAuth();
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+
+  // Prevent main background page from scrolling while mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
 
   const rolesList = [
     { name: 'Citizen', desc: 'Report SOS, Missing & Damage', color: 'text-blue-400' },
@@ -207,7 +219,7 @@ export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, onCloseMobile }) 
           />
 
           {/* Drawer Panel */}
-          <div className="relative w-72 max-w-[85vw] bg-slate-900 border-r border-slate-700 h-full p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+          <div className="relative w-72 max-w-[85vw] bg-slate-900 border-r border-slate-700 h-full max-h-screen p-4 shadow-2xl z-10 overflow-y-auto animate-in slide-in-from-left duration-200">
             {navContent}
           </div>
         </div>
