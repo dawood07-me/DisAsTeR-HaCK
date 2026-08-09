@@ -16,7 +16,8 @@ import {
   Focus,
   AlertCircle,
   Upload,
-  Link as LinkIcon
+  Link as LinkIcon,
+  RefreshCcw
 } from 'lucide-react';
 
 export const MissingPage = () => {
@@ -68,6 +69,7 @@ export const MissingPage = () => {
   const [cameraError, setCameraError] = useState(null);
   const [scanningStatus, setScanningStatus] = useState('idle'); // 'idle' | 'scanning' | 'matched'
   const [matchResult, setMatchResult] = useState(null);
+  const [facingMode, setFacingMode] = useState('user'); // 'user' = front, 'environment' = rear
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -82,7 +84,7 @@ export const MissingPage = () => {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } 
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: facingMode } 
         });
         streamRef.current = stream;
         setCameraActive(true);
@@ -111,8 +113,38 @@ export const MissingPage = () => {
     }
     setScanPerson(null);
     setCameraActive(false);
+    setFacingMode('user');
     setScanningStatus('idle');
     setMatchResult(null);
+  };
+
+  // Switch between front and rear camera
+  const switchCamera = async () => {
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newMode);
+
+    // Stop current stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: newMode }
+      });
+      streamRef.current = stream;
+      setCameraActive(true);
+      setCameraError(null);
+      // Attach to video element immediately if available
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err) {
+      setCameraActive(false);
+      setCameraError('Could not switch camera — device may only have one camera');
+    }
   };
 
   // Trigger Live Biometric Scan — uses real canvas-based facial analysis
@@ -471,9 +503,21 @@ export const MissingPage = () => {
                   <div className="text-[10px] uppercase font-extrabold text-cyan-400 tracking-wider mb-2 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                      LIVE CAMERA STREAM (CAMERA FEED)
+                      {facingMode === 'user' ? 'FRONT CAMERA' : 'REAR CAMERA'}
                     </span>
-                    <Focus className="w-4 h-4 text-cyan-400" />
+                    <div className="flex items-center gap-2">
+                      {cameraActive && (
+                        <button
+                          onClick={switchCamera}
+                          title={facingMode === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-950 border border-cyan-700 text-cyan-300 hover:bg-cyan-900 hover:text-cyan-100 transition active:scale-95 text-[10px] font-bold"
+                        >
+                          <RefreshCcw className="w-3 h-3" />
+                          SWITCH
+                        </button>
+                      )}
+                      <Focus className="w-4 h-4 text-cyan-400" />
+                    </div>
                   </div>
 
                   <div className="w-full h-48 bg-slate-900 rounded-xl overflow-hidden relative flex items-center justify-center border border-cyan-500/30">
@@ -491,7 +535,7 @@ export const MissingPage = () => {
                         autoPlay 
                         playsInline 
                         muted 
-                        className="w-full h-full object-cover transform -scale-x-100" 
+                        className={`w-full h-full object-cover ${facingMode === 'user' ? 'transform -scale-x-100' : ''}`} 
                       />
                     ) : (
                       /* Simulated High-Tech Facial Scan HUD View */
