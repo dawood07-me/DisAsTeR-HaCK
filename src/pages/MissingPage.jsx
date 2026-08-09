@@ -51,6 +51,18 @@ export const MissingPage = () => {
     }
   };
 
+  // Prevent background page scrolling when modals are open
+  useEffect(() => {
+    if (scanPerson || showReportModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [scanPerson, showReportModal]);
+
   // Facial Verification Camera Modal State
   const [scanPerson, setScanPerson] = useState(null); // Person object being scanned
   const [cameraActive, setCameraActive] = useState(false);
@@ -363,18 +375,18 @@ export const MissingPage = () => {
 
       {/* AI CAMERA FACIAL RECOGNITION SCANNER MODAL */}
       {scanPerson && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-2xl bg-slate-900 border border-purple-500/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in overflow-y-auto">
+          <div className="w-full max-w-2xl bg-slate-900 border border-purple-500/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
             
             {/* Modal Header Bar */}
-            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 px-5 py-4 flex items-center justify-between border-b border-purple-500/30">
+            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 px-5 py-4 flex items-center justify-between border-b border-purple-500/30 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-700">
                   <Camera className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base text-white tracking-wide flex items-center gap-2">
-                    AI FACIAL RECOGNITION CAMERA SCANNER
+                  <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide flex items-center gap-2">
+                    AI FACIAL RECOGNITION SCANNER
                     <span className="text-[10px] bg-purple-950 text-purple-300 px-2 py-0.5 rounded border border-purple-700">
                       LIVE HUD
                     </span>
@@ -393,7 +405,7 @@ export const MissingPage = () => {
             </div>
 
             {/* Modal Content: Split Screen Camera View & Reference Photo */}
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
