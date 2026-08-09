@@ -51,17 +51,15 @@ export const MissingPage = () => {
     }
   };
 
-  // Prevent background page scrolling when modals are open
+  // Cleanup camera stream on unmount
   useEffect(() => {
-    if (scanPerson || showReportModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
     return () => {
-      document.body.style.overflow = '';
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
     };
-  }, [scanPerson, showReportModal]);
+  }, []);
 
   // Facial Verification Camera Modal State
   const [scanPerson, setScanPerson] = useState(null); // Person object being scanned
@@ -158,9 +156,9 @@ export const MissingPage = () => {
     setShowReportModal(false);
   };
 
-  const filtered = missingPersons.filter(m => 
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    m.last_seen.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = (missingPersons || []).filter(m => 
+    (m?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (m?.last_seen || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -447,7 +445,13 @@ export const MissingPage = () => {
                     {/* Active Webcam element */}
                     {cameraActive ? (
                       <video 
-                        ref={videoRef} 
+                        ref={(node) => {
+                          videoRef.current = node;
+                          if (node && streamRef.current) {
+                            node.srcObject = streamRef.current;
+                            node.play().catch(() => {});
+                          }
+                        }} 
                         autoPlay 
                         playsInline 
                         muted 
