@@ -423,25 +423,38 @@ app.get('/api/health', (req, res) => {
 
 
 app.get('/api/sos', (req, res) => {
-  res.json([{ id: 1, message: "SOS working" }]);
+  res.json([]);
 });
 
 app.get('/api/relief', (req, res) => {
-  res.json([{ id: 1, message: "Relief working" }]);
+  res.json([]);
 });
 
 app.get('/api/missing', (req, res) => {
-  res.json([{ id: 1, message: "Missing working" }]);
+  res.json([]);
 });
 
 app.get('/api/damage', (req, res) => {
-  res.json([{ id: 1, message: "Damage working" }]);
+  res.json([]);
+});
+
+app.get('/api/shelters', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/weather', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/prediction', (req, res) => {
+  res.json([]);
 });
 
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 app.get("/", (req, res) => {
   res.send("RakshAI Backend Running 🚀");
