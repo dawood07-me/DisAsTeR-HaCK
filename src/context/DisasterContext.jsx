@@ -36,13 +36,13 @@ export const DisasterProvider = ({ children }) => {
   const fetchAllData = useCallback(async () => {
     try {
       const [sosRes, relRes, misRes, dmgRes, shlRes, prdRes, wxhRes] = await Promise.allSettled([
-        fetch('/api/sos'),
-        fetch('/api/relief'),
-        fetch('/api/missing'),
-        fetch('/api/damage'),
-        fetch('/api/shelters'),
-        fetch('/api/prediction'),
-        fetch('/api/weather')
+        fetch(`${API_BASE}/api/sos`),
+        fetch(`${API_BASE}/api/relief`),
+        fetch(`${API_BASE}/api/missing`),
+        fetch(`${API_BASE}/api/damage`),
+        fetch(`${API_BASE}/api/shelters`),
+        fetch(`${API_BASE}/api/prediction`),
+        fetch(`${API_BASE}/api/weather`)
       ]);
 
       if (sosRes.status === 'fulfilled' && sosRes.value.ok) setSosRequests(await sosRes.value.json());

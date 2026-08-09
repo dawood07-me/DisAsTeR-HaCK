@@ -66,7 +66,7 @@ export const AdminPage = () => {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      const res = await fetch('/api/users');
+      const res = await fetch(`${API_BASE}/api/users`);
       if (res.ok) {
         const data = await res.json();
         setRegisteredUsers(data);
@@ -92,7 +92,7 @@ export const AdminPage = () => {
   const handleVerify = async (userId, status) => {
     setActionLoading(userId);
     try {
-      const res = await fetch('/api/users/verify', {
+      const res = await fetch(`${API_BASE}/api/users/verify`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: userId, verification_status: status })
