@@ -1,18 +1,19 @@
+import { loadModels } from '../utils/face';
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDisaster } from '../context/DisasterContext';
 import { StatusBadge } from '../components/StatusBadge';
 import { compareFacialBiometrics } from '../utils/faceAnalyzer';
-import { 
-  UserX, 
-  Sparkles, 
-  MapPin, 
-  Plus, 
-  Search, 
-  Camera, 
-  CheckCircle2, 
-  X, 
-  Scan, 
+import {
+  UserX,
+  Sparkles,
+  MapPin,
+  Plus,
+  Search,
+  Camera,
+  CheckCircle2,
+  X,
+  Scan,
   Focus,
   AlertCircle,
   Upload,
@@ -21,6 +22,10 @@ import {
 } from 'lucide-react';
 
 export const MissingPage = () => {
+  useEffect(() => {
+    loadModels();
+  }, []);
+
   const { user } = useAuth();
   const { missingPersons, reportMissingPerson, triggerAIMatch } = useDisaster();
 
@@ -28,6 +33,7 @@ export const MissingPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [name, setName] = useState('');
   const [age, setAge] = useState(24);
+  const canvasRef = useRef(null);
   const [gender, setGender] = useState('Male');
   const [photoUrl, setPhotoUrl] = useState('');
   const [useUrlInput, setUseUrlInput] = useState(false);
@@ -37,7 +43,40 @@ export const MissingPage = () => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [capturedImage, setCapturedImage] = useState(null);
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Camera error:", err);
+      alert("Camera access denied or not working");
+    }
+  };
+  const captureImage = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    const imageData = canvas.toDataURL('image/png');
+    setCapturedImage(imageData);
+  };
+  const handleMatch = async () => {
+    if (!capturedImage || !photoUrl) {
+      alert("Capture image and upload photo first");
+      return;
+    }
+
+    const result = await matchFaces(photoUrl, capturedImage);
+    setMatchResult(result);
+  };
   const handleFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -83,8 +122,8 @@ export const MissingPage = () => {
     // Try to open user webcam
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: facingMode } 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: facingMode }
         });
         streamRef.current = stream;
         setCameraActive(true);
@@ -139,7 +178,7 @@ export const MissingPage = () => {
       // Attach to video element immediately if available
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       }
     } catch (err) {
       setCameraActive(false);
@@ -224,15 +263,32 @@ export const MissingPage = () => {
     setShowReportModal(false);
   };
 
-  const filtered = (missingPersons || []).filter(m => 
-    (m?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filtered = (missingPersons || []).filter(m =>
+    (m?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (m?.last_seen || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
+      {/* 🔥 CAMERA TEST UI */}
+      <div>
+        <video ref={videoRef} autoPlay width="300" />
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+        <button onClick={startCamera}>Start Camera</button>
+        <button onClick={captureImage}>Capture</button>
+        <button onClick={handleMatch}>Verify Face</button>
+        {capturedImage && (
+          <img src={capturedImage} alt="captured" width="200" />
+        )}
+        {matchResult !== null && (
+          <p>
+            Match Result: {matchResult ? "✅ MATCH" : "❌ NOT MATCH"}
+          </p>
+        )}
+      </div>
       <div className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
@@ -443,7 +499,7 @@ export const MissingPage = () => {
       {scanPerson && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in overflow-y-auto">
           <div className="w-full max-w-2xl bg-slate-900 border border-purple-500/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
-            
+
             {/* Modal Header Bar */}
             <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 px-5 py-4 flex items-center justify-between border-b border-purple-500/30 shrink-0">
               <div className="flex items-center gap-3">
@@ -472,9 +528,9 @@ export const MissingPage = () => {
 
             {/* Modal Content: Split Screen Camera View & Reference Photo */}
             <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+
                 {/* Reference Photo Card */}
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
                   <div>
@@ -483,10 +539,10 @@ export const MissingPage = () => {
                       <span className="text-slate-400">{scanPerson.id}</span>
                     </div>
                     <div className="w-full h-48 rounded-xl overflow-hidden border border-purple-500/30 relative">
-                      <img 
-                        src={scanPerson.photo_url} 
-                        alt={scanPerson.name} 
-                        className="w-full h-full object-cover" 
+                      <img
+                        src={scanPerson.photo_url}
+                        alt={scanPerson.name}
+                        className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 border-2 border-purple-500/40 pointer-events-none rounded-xl"></div>
                     </div>
@@ -521,28 +577,28 @@ export const MissingPage = () => {
                   </div>
 
                   <div className="w-full h-48 bg-slate-900 rounded-xl overflow-hidden relative flex items-center justify-center border border-cyan-500/30">
-                    
+
                     {/* Active Webcam element */}
                     {cameraActive ? (
-                      <video 
+                      <video
                         ref={(node) => {
                           videoRef.current = node;
                           if (node && streamRef.current) {
                             node.srcObject = streamRef.current;
-                            node.play().catch(() => {});
+                            node.play().catch(() => { });
                           }
-                        }} 
-                        autoPlay 
-                        playsInline 
-                        muted 
-                        className={`w-full h-full object-cover ${facingMode === 'user' ? 'transform -scale-x-100' : ''}`} 
+                        }}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={`w-full h-full object-cover ${facingMode === 'user' ? 'transform -scale-x-100' : ''}`}
                       />
                     ) : (
                       /* Simulated High-Tech Facial Scan HUD View */
                       <div className="w-full h-full relative bg-slate-900 flex items-center justify-center overflow-hidden">
-                        <img 
-                          src={scanPerson.photo_url} 
-                          alt="Camera subject" 
+                        <img
+                          src={scanPerson.photo_url}
+                          alt="Camera subject"
                           className="w-full h-full object-cover opacity-70 filter contrast-125 saturate-50"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-purple-950/40 to-transparent"></div>
@@ -551,11 +607,10 @@ export const MissingPage = () => {
 
                     {/* Facial Scanner Targeting Reticle HUD Overlay */}
                     <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                      <div className={`w-36 h-44 border-2 rounded-2xl transition-all ${
-                        scanningStatus === 'matched' ? 'border-emerald-400 shadow-[0_0_20px_#10b981]' : 
+                      <div className={`w-36 h-44 border-2 rounded-2xl transition-all ${scanningStatus === 'matched' ? 'border-emerald-400 shadow-[0_0_20px_#10b981]' :
                         scanningStatus === 'scanning' ? 'border-amber-400 animate-pulse' : 'border-purple-400'
-                      } relative`}>
-                        
+                        } relative`}>
+
                         {/* Target Corner Markers */}
                         <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-cyan-400"></div>
                         <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-cyan-400"></div>
@@ -715,13 +770,12 @@ export const MissingPage = () => {
               {/* Camera Facial Scan Verification Trigger Button */}
               <button
                 onClick={() => openCameraModal(person)}
-                className={`w-full py-2.5 rounded-xl font-extrabold text-xs shadow flex items-center justify-center gap-2 border transition ${
-                  person.status === 'Match Found' 
-                    ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-emerald-500/30' 
-                    : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 text-white border-purple-400/40'
-                }`}
+                className={`w-full py-2.5 rounded-xl font-extrabold text-xs shadow flex items-center justify-center gap-2 border transition ${person.status === 'Match Found'
+                  ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-emerald-500/30'
+                  : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 text-white border-purple-400/40'
+                  }`}
               >
-                <Camera className="w-4 h-4 text-cyan-300" /> 
+                <Camera className="w-4 h-4 text-cyan-300" />
                 {person.status === 'Match Found' ? 'RE-SCAN CAMERA FACIAL RECOGNITION' : 'OPEN CAMERA & VERIFY FACIAL MATCH'}
               </button>
             </div>
