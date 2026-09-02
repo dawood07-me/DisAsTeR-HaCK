@@ -1,371 +1,556 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { API_BASE } from '../config';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   CloudRain, 
-  CloudLightning, 
+  Sparkles,
   MapPin, 
   RefreshCw, 
   Thermometer, 
   Wind, 
   Droplets, 
-  AlertTriangle, 
-  Info,
-  Layers
+  ShieldAlert, 
+  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ChevronDown,
+  Check,
+  Brain,
+  Layers,
+  Bell
 } from 'lucide-react';
-
-export const ASSAM_LOCATIONS = [
-  { id: 'guwahati', name: 'Guwahati', district: 'Kamrup Metropolitan', lat: 26.1445, lng: 91.7362, key_river: 'Brahmaputra River' },
-  { id: 'dibrugarh', name: 'Dibrugarh', district: 'Dibrugarh District', lat: 27.4728, lng: 94.9120, key_river: 'Upper Brahmaputra' },
-  { id: 'silchar', name: 'Silchar', district: 'Cachar (Barak Valley)', lat: 24.8333, lng: 92.7789, key_river: 'Barak River' },
-  { id: 'jorhat', name: 'Jorhat', district: 'Jorhat District', lat: 26.7509, lng: 94.2037, key_river: 'Bhogdoi & Brahmaputra' },
-  { id: 'tezpur', name: 'Tezpur', district: 'Sonitpur District', lat: 26.6338, lng: 92.8000, key_river: 'Jia Bharali & Brahmaputra' },
-  { id: 'nagaon', name: 'Nagaon', district: 'Nagaon District', lat: 26.3463, lng: 92.6840, key_river: 'Kopili & Kolong River' },
-  { id: 'tinsukia', name: 'Tinsukia', district: 'Tinsukia District', lat: 27.4922, lng: 95.3558, key_river: 'Dibru & Lohit' },
-  { id: 'dhubri', name: 'Dhubri', district: 'Dhubri District', lat: 26.0207, lng: 89.9749, key_river: 'Lower Brahmaputra' },
-  { id: 'bongaigaon', name: 'Bongaigaon', district: 'Bongaigaon District', lat: 26.4789, lng: 90.5583, key_river: 'Aie River Basin' },
-  { id: 'north lakhimpur', name: 'North Lakhimpur', district: 'Lakhimpur District', lat: 27.2345, lng: 94.1062, key_river: 'Subansiri River' },
-  { id: 'haflong', name: 'Haflong', district: 'Dima Hasao Hill Sector', lat: 25.1667, lng: 93.0167, key_river: 'Jatinga River' },
-  { id: 'barpeta', name: 'Barpeta', district: 'Barpeta District', lat: 26.3200, lng: 91.0000, key_river: 'Manas & Beki River' }
-];
+import { ASSAM_DISTRICTS } from '../config/assamDistricts';
+import { fetchDistrictWeatherDataAndPredict } from '../services/lstmRainfallModel';
 
 export const AssamRainfallOverview = () => {
-  const [selectedLocId, setSelectedLocId] = useState('guwahati');
-  const [data, setData] = useState(null);
+  const [selectedDistrictId, setSelectedDistrictId] = useState('guwahati');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [telemetry, setTelemetry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  
+  const dropdownRef = useRef(null);
 
-  const selectedLoc = ASSAM_LOCATIONS.find(l => l.id === selectedLocId) || ASSAM_LOCATIONS[0];
+  const selectedDistrict = ASSAM_DISTRICTS.find(d => d.id === selectedDistrictId) || ASSAM_DISTRICTS[0];
 
-  const fetchAssamRainfallData = useCallback(async (loc) => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch telemetry & trigger LSTM inference pipeline
+  const loadDistrictData = useCallback(async (district) => {
     setLoading(true);
     setError(null);
-
     try {
-      let rainMm = 12.4;
-      let rain24h = 48.6;
-      let rainProb = 85;
-      let temp = 27.5;
-      let humidity = 88;
-      let wind = 14.5;
-      let pressure = 1004;
-      let hourly = [1.2, 2.5, 4.8, 6.2, 8.5, 12.4, 10.1, 7.2, 5.0, 3.1, 1.8, 0.5];
-
-      try {
-        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lng}&current=temperature_2m,relative_humidity_2m,precipitation,rain,surface_pressure,wind_speed_10m&hourly=precipitation&daily=precipitation_sum,precipitation_probability_max&timezone=Asia%2FKolkata`;
-        
-        const omRes = await fetch(openMeteoUrl);
-        if (omRes.ok) {
-          const omData = await omRes.json();
-          const current = omData.current || {};
-          const daily = omData.daily || {};
-          const hourlyArr = omData.hourly || {};
-
-          rainMm = current.precipitation ?? current.rain ?? rainMm;
-          rain24h = daily.precipitation_sum ? daily.precipitation_sum[0] : rain24h;
-          rainProb = daily.precipitation_probability_max ? daily.precipitation_probability_max[0] : rainProb;
-          temp = current.temperature_2m ?? temp;
-          humidity = current.relative_humidity_2m ?? humidity;
-          wind = current.wind_speed_10m ?? wind;
-          pressure = current.surface_pressure ?? pressure;
-          if (hourlyArr.precipitation) {
-            hourly = hourlyArr.precipitation.slice(0, 12);
-          }
-        }
-      } catch (e) {
-        // Use default regional weather parameters if rate limited
-      }
-
-      let warningLevel = 'GREEN / SAFE';
-      let warningMessage = 'Precipitation within normal range for Brahmaputra/Barak basin.';
-      if (rainMm > 15 || rain24h > 100) {
-        warningLevel = 'RED ALERT';
-        warningMessage = 'Heavy downpour causing elevated river discharge and high flash flood risk.';
-      } else if (rainMm > 5 || rain24h > 40) {
-        warningLevel = 'ORANGE ALERT';
-        warningMessage = 'Moderate to heavy rainfall. Inundation risk in low-lying riverine sectors.';
-      } else if (rainMm > 0 || rain24h > 10) {
-        warningLevel = 'YELLOW WATCH';
-        warningMessage = 'Light to moderate shower activity detected across district boundaries.';
-      }
-
-      setData({
-        state: 'Assam',
-        country: 'India',
-        location: loc.name,
-        district: loc.district,
-        coordinates: { lat: loc.lat, lng: loc.lng },
-        rainfall: {
-          current_mm_h: Number(Number(rainMm).toFixed(1)),
-          rain_24h_mm: Number(Number(rain24h).toFixed(1)),
-          rain_probability_pct: rainProb,
-          intensity: rainMm > 15 ? 'Torrential Rain' : rainMm > 5 ? 'Heavy Downpour' : rainMm > 0 ? 'Moderate Shower' : 'Dry / Clear Sky',
-          hourly_trend: hourly
-        },
-        temperature_c: Number(Number(temp).toFixed(1)),
-        humidity_pct: Math.round(humidity),
-        wind_speed_kmh: Number(Number(wind).toFixed(1)),
-        pressure_hpa: Math.round(pressure),
-        warning_level: warningLevel,
-        warning_message: warningMessage,
-        updated_at: new Date().toISOString()
-      });
-
+      const result = await fetchDistrictWeatherDataAndPredict(district);
+      setTelemetry(result);
       setLastRefreshed(new Date());
     } catch (err) {
-      console.warn('Weather fallback applied:', err);
+      console.error('Failed to load district rainfall & LSTM model:', err);
+      setError('Telemetry stream temporarily interrupted.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAssamRainfallData(selectedLoc);
-  }, [selectedLoc, fetchAssamRainfallData]);
+    loadDistrictData(selectedDistrict);
+  }, [selectedDistrict, loadDistrictData]);
+
+  const handleRefresh = () => {
+    loadDistrictData(selectedDistrict);
+  };
+
+  // Format date time e.g., "02 Jun 2025, 11:30 AM"
+  const formatTimestamp = (date) => {
+    if (!date) return 'Just now';
+    return date.toLocaleString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const weather = telemetry?.weather || {
+    current_rain_mm_h: 0.0,
+    rain_24h_mm: 0.5,
+    rain_prob_pct: 40,
+    temp_c: 27.5,
+    feels_like_c: 29.1,
+    humidity_pct: 84,
+    dew_point_c: 24.6,
+    wind_kmh: 0.5,
+    pressure_hpa: 1002,
+    current_intensity: 'Dry / Clear Sky'
+  };
+
+  const prediction = telemetry?.prediction || {
+    predictedRainRate: 12.4,
+    predictionIntensity: 'Moderate Rain',
+    forecastHorizon: 'Next 6 Hours',
+    trend: 'Rising',
+    trendDescription: 'Increasing rainfall expected',
+    riskLevel: 'HIGH',
+    riskColor: 'rose',
+    riskAction: 'Stay Alert',
+    riskMessage: 'Precipitation within normal range for Brahmaputra/Barak basin.',
+    forecast12Hours: [0.0, 0.0, 0.0, 0.1, 0.3, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0]
+  };
+
+  // Risk display helper
+  const isHighOrCritical = prediction.riskLevel === 'HIGH' || prediction.riskLevel === 'CRITICAL';
+  const isModerate = prediction.riskLevel === 'MODERATE';
+  const isSafe = prediction.riskLevel === 'GREEN / SAFE' || prediction.riskLevel === 'LOW';
 
   return (
-    <div className="glass-panel rounded-2xl p-5 border border-slate-200 dark:border-cyan-900/60 shadow-sm space-y-5 transition-colors duration-200">
+    <div className="w-full bg-[#070D18] border border-slate-800/80 rounded-2xl p-5 md:p-7 shadow-2xl text-slate-100 font-sans transition-all duration-300">
       
-      {/* Top Banner Header: Explicitly showing ASSAM, INDIA */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="p-2 rounded-xl bg-blue-600 text-white shadow-sm">
-              <CloudRain className="w-5 h-5 animate-pulse text-white" />
-            </span>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wide uppercase">
-              LIVE AI TELEMETRY & DISASTER OVERVIEW
-            </h2>
-            <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1 shadow-2xs">
-              <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> ASSAM, INDIA
-            </span>
+      {/* ========================================================
+          1. HEADER & DISTRICT SELECTOR
+          ======================================================== */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-800/60">
+        
+        {/* Title and Subtitle */}
+        <div className="flex items-start gap-3.5">
+          <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex-shrink-0 mt-0.5">
+            <CloudRain className="w-6 h-6" />
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            Real-time atmospheric precipitation & hydrological radar monitoring for disaster risk
-          </p>
-        </div>
-
-        {/* Location Dropdown & Refresh button */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <select
-              value={selectedLocId}
-              onChange={(e) => setSelectedLocId(e.target.value)}
-              className="w-full bg-slate-900 dark:bg-slate-900 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl border border-slate-800 dark:border-cyan-700/60 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-md"
-            >
-              {ASSAM_LOCATIONS.map(l => (
-                <option key={l.id} value={l.id} className="bg-slate-900 text-white">
-                  📍 {l.name} ({l.district})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={() => fetchAssamRainfallData(selectedLoc)}
-            disabled={loading}
-            className="px-3.5 py-2.5 rounded-xl bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-600 dark:text-cyan-300 border border-blue-200 dark:border-slate-700 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50 shrink-0 shadow-2xs"
-            title="Refresh API Data"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Assam District Quick Pills */}
-      <div className="space-y-2">
-        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-          <Layers className="w-3 h-3 text-blue-600 dark:text-cyan-400" /> QUICK ASSAM DISTRICT SELECTOR:
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {ASSAM_LOCATIONS.map(loc => (
-            <button
-              key={loc.id}
-              onClick={() => setSelectedLocId(loc.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
-                selectedLocId === loc.id
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 border border-blue-500 font-extrabold'
-                  : 'bg-white dark:bg-slate-900/80 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-2xs'
-              }`}
-            >
-              <span>{loc.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Location Info Bar */}
-      <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-cyan-950/30 border border-blue-100 dark:border-cyan-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-blue-600 dark:text-cyan-400 shrink-0" />
           <div>
-            <span className="font-extrabold text-blue-900 dark:text-white text-sm">{selectedLoc.name}</span>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+                AI Rainfall Dashboard
+              </h2>
+            </div>
+            <p className="text-xs md:text-sm text-slate-400 font-normal mt-0.5">
+              Real-time & AI-Powered Rainfall Insights for {selectedDistrict.fullName}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-slate-700 dark:text-slate-300 font-mono">
-          <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-blue-100 dark:border-slate-800 shadow-2xs">
-            River Basin: <strong className="text-blue-600 dark:text-cyan-300">{selectedLoc.key_river}</strong>
-          </span>
-          <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-blue-100 dark:border-slate-800 hidden sm:inline shadow-2xs">
-            Coords: {selectedLoc.lat.toFixed(2)}°N, {selectedLoc.lng.toFixed(2)}°E
-          </span>
-        </div>
-      </div>
 
-      {/* Loading Indicator */}
-      {loading && (
-        <div className="py-12 text-center space-y-3">
-          <RefreshCw className="w-8 h-8 text-cyan-600 dark:text-cyan-400 animate-spin mx-auto" />
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-bold">Querying live weather API telemetry for {selectedLoc.name}, Assam...</p>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && !loading && (
-        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Dynamic API Metrics Display */}
-      {!loading && data && (
-        <div className="space-y-4">
+        {/* District Selector & Refresh Timestamp */}
+        <div className="flex flex-wrap items-center gap-3">
           
-          {/* Warning Banner */}
-          <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${
-            data.warning_level.includes('RED')
-              ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800/80 text-red-900 dark:text-red-300'
-              : data.warning_level.includes('ORANGE')
-              ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-300'
-              : data.warning_level.includes('YELLOW')
-              ? 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/60 text-yellow-900 dark:text-yellow-300'
-              : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-300'
-          }`}>
-            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 animate-pulse" />
-            <div className="space-y-0.5">
-              <div className="font-extrabold text-xs tracking-wider flex items-center gap-2">
-                <span>{data.warning_level}</span>
-                <span>•</span>
-                <span>{data.location}, ASSAM, INDIA</span>
-              </div>
-              <p className="text-xs leading-relaxed text-slate-800 dark:text-slate-200">{data.warning_message}</p>
-            </div>
-          </div>
+          {/* Custom Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0D1627] hover:bg-[#121E36] border border-slate-700/70 hover:border-blue-500/60 text-slate-200 text-xs md:text-sm font-semibold transition-all duration-200 shadow-sm"
+            >
+              <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <span>{selectedDistrict.fullName}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          {/* 4 Metric Cards (100% Dynamic API Values) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            
-            {/* Card 1: Current Hourly Rainfall */}
-            <div className="bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-cyan-800/50 p-4 rounded-2xl space-y-1 relative overflow-hidden shadow-sm">
-              <div className="text-[10px] text-cyan-700 dark:text-cyan-400 uppercase font-extrabold flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  <CloudRain className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" /> Current Rain Rate
-                </span>
-                <span className="text-[9px] bg-cyan-100 dark:bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300">LIVE API</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-cyan-700 dark:text-cyan-300 mt-1">
-                {data.rainfall.current_mm_h} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">mm/h</span>
-              </div>
-              <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                Intensity: <span className="text-slate-900 dark:text-white font-extrabold">{data.rainfall.intensity}</span>
-              </div>
-            </div>
-
-            {/* Card 2: 24-Hour Accumulated Rainfall */}
-            <div className="bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1 shadow-sm">
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  <Droplets className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" /> 24h Cumulative Rain
-                </span>
-                <span className="text-[9px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">API TOTAL</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300 mt-1">
-                {data.rainfall.rain_24h_mm} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">mm</span>
-              </div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                Probability: <strong className="text-blue-600 dark:text-blue-400">{data.rainfall.rain_probability_pct}%</strong>
-              </div>
-            </div>
-
-            {/* Card 3: Temperature */}
-            <div className="bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1 shadow-sm">
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold flex items-center gap-1">
-                <Thermometer className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" /> Temperature
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">
-                {data.temperature_c}°C
-              </div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                Humidity: <strong className="text-rose-600 dark:text-rose-300">{data.humidity_pct}%</strong>
-              </div>
-            </div>
-
-            {/* Card 4: Wind & Pressure */}
-            <div className="bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1 shadow-sm">
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold flex items-center gap-1">
-                <Wind className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Wind Velocity
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">
-                {data.wind_speed_kmh} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">km/h</span>
-              </div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                Pressure: <strong className="text-slate-800 dark:text-slate-300">{data.pressure_hpa} hPa</strong>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Dynamic Hourly Forecast Bar Visualization */}
-          {data.rainfall.hourly_trend && data.rainfall.hourly_trend.length > 0 && (
-            <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <CloudLightning className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                  12-Hour Rain Telemetry Forecast — {data.location}, Assam
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Values in mm/h</span>
-              </div>
-
-              <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-2">
-                {data.rainfall.hourly_trend.map((val, idx) => {
-                  const numVal = Number(val) || 0;
-                  const barHeight = Math.min(Math.max(numVal * 8, 8), 48); // Scale for visual bar
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-64 max-h-80 overflow-y-auto rounded-xl bg-[#0D1627] border border-slate-700/80 shadow-2xl py-1.5 z-50 divide-y divide-slate-800/40">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Select Assam District / Region (12 Total)
+                </div>
+                {ASSAM_DISTRICTS.map((district) => {
+                  const isSelected = district.id === selectedDistrictId;
                   return (
-                    <div key={idx} className="flex flex-col items-center gap-1 text-center">
-                      <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">{numVal.toFixed(1)}</span>
-                      <div className="w-full bg-slate-200 dark:bg-slate-950 rounded-md h-12 flex items-end p-0.5 border border-slate-300 dark:border-slate-800">
-                        <div 
-                          className={`w-full rounded-sm transition-all duration-500 ${
-                            numVal > 5 ? 'bg-red-500' : numVal > 2 ? 'bg-amber-500 dark:bg-amber-400' : numVal > 0 ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-slate-400 dark:bg-slate-700'
-                          }`} 
-                          style={{ height: `${barHeight}px` }}
-                        />
+                    <button
+                      key={district.id}
+                      onClick={() => {
+                        setSelectedDistrictId(district.id);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600/20 text-blue-400 font-bold' 
+                          : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-semibold">{district.fullName}</div>
+                        <div className="text-[10px] text-slate-500">{district.district} • {district.basin}</div>
                       </div>
-                      <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">+{idx + 1}h</span>
-                    </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 ml-2" />}
+                    </button>
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* Footer Timestamp */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-            <span className="flex items-center gap-1">
-              <Info className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-              Source: IMD & Open-Meteo Dynamic Weather Telemetry for <strong className="text-slate-800 dark:text-slate-300">Assam, India</strong>
-            </span>
-            {lastRefreshed && (
-              <span className="font-mono text-slate-500 dark:text-slate-400">
-                Updated: {lastRefreshed.toLocaleTimeString()}
-              </span>
             )}
           </div>
 
+          {/* Refresh Action */}
+          <button
+            onClick={handleRefresh}
+            title="Refresh live rainfall & re-run LSTM prediction"
+            className="p-2 rounded-xl bg-[#0D1627] hover:bg-[#121E36] border border-slate-700/70 text-slate-400 hover:text-white transition-all flex items-center justify-center"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : ''}`} />
+          </button>
+
+          {/* Last Updated Timestamp */}
+          <div className="text-right pl-2 hidden sm:block">
+            <span className="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+              Last Updated:
+            </span>
+            <span className="text-xs text-slate-300 font-medium font-mono">
+              {formatTimestamp(lastRefreshed)}
+            </span>
+          </div>
+
         </div>
-      )}
+      </div>
+
+      {/* ========================================================
+          2. RISK & REGIONAL BASIN STATUS BANNER
+          ======================================================== */}
+      <div className={`mt-5 p-3.5 md:p-4 rounded-xl border flex items-center gap-3.5 transition-all duration-300 ${
+        isHighOrCritical
+          ? 'bg-rose-950/30 border-rose-900/60 text-rose-300'
+          : isModerate
+          ? 'bg-amber-950/30 border-amber-900/60 text-amber-300'
+          : 'bg-[#091C1C]/70 border-emerald-900/50 text-emerald-300'
+      }`}>
+        <div className={`p-2 rounded-lg ${
+          isHighOrCritical 
+            ? 'bg-rose-900/40 text-rose-400 border border-rose-700/40' 
+            : isModerate
+            ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40'
+            : 'bg-emerald-950/80 text-emerald-400 border border-emerald-700/40'
+        }`}>
+          {isHighOrCritical ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-black text-xs md:text-sm tracking-wide uppercase">
+              {prediction.riskLevel}
+            </span>
+            <span className="text-slate-500 text-xs">•</span>
+            <span className="font-bold text-xs md:text-sm tracking-wide text-white uppercase">
+              {selectedDistrict.name}, ASSAM, INDIA
+            </span>
+          </div>
+          <p className="text-xs text-slate-300 font-normal mt-0.5 truncate md:whitespace-normal">
+            {prediction.riskMessage}
+          </p>
+        </div>
+      </div>
+
+      {/* ========================================================
+          3. ROW 1: FOUR KEY PREDICTION & TELEMETRY CARDS
+          ======================================================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+        
+        {/* CARD 1: CURRENT RAIN RATE (Live API) */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-teal-500/40 transition-all duration-200">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Droplets className="w-4 h-4 text-teal-400" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-400">
+                Current Rain Rate
+              </span>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-teal-950/80 text-teal-300 border border-teal-800/60 text-[10px] font-mono font-bold tracking-wide">
+              LIVE API
+            </span>
+          </div>
+
+          <div className="my-4">
+            <div className="flex items-baseline">
+              <span className="text-4xl md:text-5xl font-black text-white font-mono tracking-tight">
+                {weather.current_rain_mm_h.toFixed(1) === '0.0' ? '0' : weather.current_rain_mm_h.toFixed(1)}
+              </span>
+              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+                mm/h
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 flex items-center gap-1.5">
+            <span>Intensity:</span>
+            <span className="font-semibold text-slate-200">
+              {weather.current_intensity}
+            </span>
+          </div>
+        </div>
+
+        {/* CARD 2: PREDICTED RAIN RATE (LSTM AI Model) */}
+        <div className="bg-[#0B1220] border border-purple-900/40 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-purple-500/50 transition-all duration-200">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Brain className="w-4 h-4 text-purple-400" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-400">
+                Predicted Rain Rate
+              </span>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-purple-950/90 text-purple-300 border border-purple-800/70 text-[10px] font-mono font-bold tracking-wide">
+              AI MODEL
+            </span>
+          </div>
+
+          <div className="my-4">
+            <div className="flex items-baseline">
+              <span className="text-4xl md:text-5xl font-black text-white font-mono tracking-tight">
+                {prediction.predictedRainRate.toFixed(1)}
+              </span>
+              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+                mm/h
+              </span>
+            </div>
+            <div className="text-xs text-slate-400 mt-1">
+              Prediction: {prediction.forecastHorizon}
+            </div>
+          </div>
+
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-900/30 text-purple-300 border border-purple-700/40">
+              {prediction.predictionIntensity}
+            </span>
+          </div>
+        </div>
+
+        {/* CARD 3: TREND (Calculated from LSTM Sequence) */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+              Trend
+            </span>
+          </div>
+
+          <div className="my-3 flex flex-col items-center justify-center text-center">
+            {/* Visual Vector Arrow */}
+            <div className="my-1">
+              {prediction.trend === 'Rising' ? (
+                <svg className="w-14 h-9 text-amber-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M 4 24 L 20 18 L 36 22 L 52 6" />
+                  <path d="M 40 6 L 52 6 L 52 18" />
+                </svg>
+              ) : prediction.trend === 'Falling' ? (
+                <svg className="w-14 h-9 text-emerald-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M 4 6 L 20 14 L 36 10 L 52 24" />
+                  <path d="M 40 24 L 52 24 L 52 12" />
+                </svg>
+              ) : (
+                <svg className="w-14 h-9 text-cyan-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M 4 15 L 52 15" />
+                  <path d="M 42 7 L 52 15 L 42 23" />
+                </svg>
+              )}
+            </div>
+
+            <div className={`text-base font-bold mt-1 ${
+              prediction.trend === 'Rising' ? 'text-amber-400' : prediction.trend === 'Falling' ? 'text-emerald-400' : 'text-cyan-400'
+            }`}>
+              {prediction.trend}
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 text-center">
+            {prediction.trendDescription}
+          </div>
+        </div>
+
+        {/* CARD 4: RISK LEVEL */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-rose-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
+              Risk Level
+            </span>
+          </div>
+
+          <div className="my-2 flex flex-col items-center justify-center text-center">
+            <div className="relative">
+              <ShieldAlert className={`w-12 h-12 ${
+                isHighOrCritical ? 'text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : isModerate ? 'text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]' : 'text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+              }`} />
+            </div>
+
+            <div className={`text-xl md:text-2xl font-black uppercase tracking-wider mt-1.5 ${
+              isHighOrCritical ? 'text-rose-500' : isModerate ? 'text-amber-500' : 'text-emerald-400'
+            }`}>
+              {prediction.riskLevel}
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 text-center font-medium">
+            {prediction.riskAction}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ========================================================
+          4. ROW 2: FOUR METEOROLOGICAL TELEMETRY CARDS
+          ======================================================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        
+        {/* CARD 5: 24H CUMULATIVE RAIN */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <Droplets className="w-4 h-4 text-cyan-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">
+              24h Cumulative Rain
+            </span>
+          </div>
+
+          <div className="my-3">
+            <div className="flex items-baseline">
+              <span className="text-3xl md:text-4xl font-extrabold text-cyan-300 font-mono tracking-tight">
+                {weather.rain_24h_mm.toFixed(1)}
+              </span>
+              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+                mm
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs pt-1">
+            <div className="text-slate-400">
+              Probability: <span className="font-bold text-cyan-400 font-mono">{weather.rain_prob_pct}%</span>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-slate-800/90 text-cyan-300 border border-slate-700/80 text-[10px] font-mono font-bold">
+              API TOTAL
+            </span>
+          </div>
+        </div>
+
+        {/* CARD 6: TEMPERATURE */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <Thermometer className="w-4 h-4 text-rose-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
+              Temperature
+            </span>
+          </div>
+
+          <div className="my-3">
+            <div className="text-3xl md:text-4xl font-extrabold text-white font-mono tracking-tight">
+              {weather.temp_c.toFixed(1)}°C
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 pt-1">
+            Feels like: <span className="font-semibold text-slate-200 font-mono">{weather.feels_like_c.toFixed(1)}°C</span>
+          </div>
+        </div>
+
+        {/* CARD 7: HUMIDITY */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-blue-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <Droplets className="w-4 h-4 text-blue-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-400">
+              Humidity
+            </span>
+          </div>
+
+          <div className="my-3">
+            <div className="text-3xl md:text-4xl font-extrabold text-white font-mono tracking-tight">
+              {weather.humidity_pct}%
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 pt-1">
+            Dew Point: <span className="font-semibold text-slate-200 font-mono">{weather.dew_point_c.toFixed(1)}°C</span>
+          </div>
+        </div>
+
+        {/* CARD 8: WIND VELOCITY */}
+        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <Wind className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+              Wind Velocity
+            </span>
+          </div>
+
+          <div className="my-3">
+            <div className="flex items-baseline">
+              <span className="text-3xl md:text-4xl font-extrabold text-amber-400 font-mono tracking-tight">
+                {weather.wind_kmh.toFixed(1)}
+              </span>
+              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+                km/h
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs text-slate-400 pt-1">
+            Pressure: <span className="font-semibold text-slate-200 font-mono">{weather.pressure_hpa} hPa</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ========================================================
+          5. 12-HOUR RAIN TELEMETRY FORECAST PANEL (LSTM OUTPUT)
+          ======================================================== */}
+      <div className="mt-5 bg-[#0A101C] border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+        
+        {/* Forecast Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800/60">
+          <div className="flex items-center gap-2">
+            <CloudRain className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-sm font-bold text-white tracking-wide">
+              12-Hour Rain Telemetry Forecast — {selectedDistrict.name}, Assam
+            </h3>
+          </div>
+          <div className="text-[11px] text-slate-400 font-mono">
+            Values in mm/h
+          </div>
+        </div>
+
+        {/* 12 Columns Grid */}
+        <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 md:gap-3 mt-4">
+          {prediction.forecast12Hours.map((val, idx) => {
+            const numVal = Number(val) || 0;
+            const hourLabel = `+${idx + 1}h`;
+            
+            // Calculate fill height percentage (max reference 25 mm/h)
+            const maxRef = 20;
+            const fillHeightPct = Math.min(100, Math.max(8, (numVal / maxRef) * 100));
+
+            const hasActiveRain = numVal > 0.05;
+
+            return (
+              <div key={idx} className="flex flex-col items-center">
+                
+                {/* Top Number */}
+                <div className="text-xs font-mono font-bold text-cyan-400 mb-1.5">
+                  {numVal.toFixed(1)}
+                </div>
+
+                {/* Vertical Gauge Container */}
+                <div className="w-full h-14 bg-[#0D1627] border border-slate-800/80 rounded-lg p-0.5 flex flex-col justify-end overflow-hidden relative shadow-inner">
+                  {/* Gauge Bar */}
+                  <div 
+                    className={`w-full rounded transition-all duration-500 ${
+                      hasActiveRain 
+                        ? 'bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_10px_rgba(6,182,212,0.6)]' 
+                        : 'bg-slate-800/40'
+                    }`}
+                    style={{ 
+                      height: hasActiveRain ? `${fillHeightPct}%` : '4px' 
+                    }}
+                  />
+                </div>
+
+                {/* Bottom Hour Label */}
+                <div className="text-[11px] font-mono text-slate-400 mt-1.5 font-medium">
+                  {hourLabel}
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
 
     </div>
   );

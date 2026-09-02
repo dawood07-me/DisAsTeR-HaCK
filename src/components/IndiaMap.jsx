@@ -11,11 +11,19 @@ import { Layers, ShieldAlert, CheckSquare, Square, RefreshCw } from 'lucide-reac
 
 // ─── 35+ GEOGRAPHICALLY DISTRIBUTED TELEMETRY COORDINATES ACROSS INDIA ───
 const INDIA_RAINFALL_HEATMAP_GRID = [
-  // Northeast & Assam Riverine Basin
+  // Northeast & Assam 12 Districts Riverine Basin
   { name: 'Guwahati, Assam', lat: 26.1445, lng: 91.7362, defaultRain: 45 },
   { name: 'Dibrugarh, Assam', lat: 27.4728, lng: 94.9120, defaultRain: 58 },
   { name: 'Silchar, Assam', lat: 24.8333, lng: 92.7789, defaultRain: 62 },
+  { name: 'Jorhat, Assam', lat: 26.7509, lng: 94.2037, defaultRain: 46 },
   { name: 'Tezpur, Assam', lat: 26.6338, lng: 92.8000, defaultRain: 42 },
+  { name: 'Nagaon, Assam', lat: 26.3463, lng: 92.6840, defaultRain: 39 },
+  { name: 'Tinsukia, Assam', lat: 27.4922, lng: 95.3558, defaultRain: 55 },
+  { name: 'Dhubri, Assam', lat: 26.0207, lng: 89.9749, defaultRain: 34 },
+  { name: 'Barpeta, Assam', lat: 26.3200, lng: 91.0000, defaultRain: 36 },
+  { name: 'Golaghat, Assam', lat: 26.5167, lng: 93.9667, defaultRain: 44 },
+  { name: 'North Lakhimpur, Assam', lat: 27.2345, lng: 94.1062, defaultRain: 52 },
+  { name: 'Bongaigaon, Assam', lat: 26.4789, lng: 90.5583, defaultRain: 38 },
   { name: 'Shillong, Meghalaya', lat: 25.5788, lng: 91.8933, defaultRain: 75 },
   { name: 'Itanagar, Arunachal Pradesh', lat: 27.0844, lng: 93.6053, defaultRain: 65 },
   { name: 'Imphal, Manipur', lat: 24.8170, lng: 93.9368, defaultRain: 38 },
