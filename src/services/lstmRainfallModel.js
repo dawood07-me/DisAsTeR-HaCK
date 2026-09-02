@@ -10,7 +10,7 @@
  * 4. Output: Next 12-Hour Hourly Rain Telemetry (+1h -> +12h), 6-Hour Horizon Rate, Trend Analysis, Dynamic Risk Level
  */
 
-import { evaluateRiskLevel } from '../config/assamDistricts';
+import { evaluateRiskLevel } from '../config/assamDistricts.js';
 
 // Feature normalization constants calibrated on Assam hydrological basin historical archives
 const FEATURE_SCALERS = {
