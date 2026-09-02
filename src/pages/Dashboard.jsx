@@ -182,12 +182,12 @@ export const Dashboard = ({ setActiveTab }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             onClick={() => setSosModalOpen(true)}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 text-white font-extrabold text-xs shadow-lg shadow-red-900/50 border border-red-400/40 transition active:scale-95"
+            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 text-white font-extrabold text-xs flex items-center justify-between shadow-lg shadow-red-900/50 border border-red-400/40 transition active:scale-95"
           >
             <span className="flex items-center gap-2">
               <AlertOctagon className="w-4 h-4 animate-bounce" /> BROADCAST RED SOS BEACON
             </span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 flex-shrink-0" />
           </button>
 
           <button
