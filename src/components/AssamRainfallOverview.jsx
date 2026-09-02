@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   CloudRain, 
-  Sparkles,
   MapPin, 
   RefreshCw, 
   Thermometer, 
@@ -10,12 +9,9 @@ import {
   ShieldAlert, 
   ShieldCheck,
   TrendingUp,
-  TrendingDown,
-  Minus,
   ChevronDown,
   Check,
   Brain,
-  Layers,
   Bell
 } from 'lucide-react';
 import { ASSAM_DISTRICTS } from '../config/assamDistricts';
@@ -113,25 +109,25 @@ export const AssamRainfallOverview = () => {
   const isSafe = prediction.riskLevel === 'GREEN / SAFE' || prediction.riskLevel === 'LOW';
 
   return (
-    <div className="w-full bg-[#070D18] border border-slate-800/80 rounded-2xl p-5 md:p-7 shadow-2xl text-slate-100 font-sans transition-all duration-300">
+    <div className="w-full bg-white dark:bg-[#070D18] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 md:p-7 shadow-sm dark:shadow-2xl text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200">
       
       {/* ========================================================
           1. HEADER & DISTRICT SELECTOR
           ======================================================== */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-800/60">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-200/80 dark:border-slate-800/60">
         
         {/* Title and Subtitle */}
         <div className="flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)] flex-shrink-0 mt-0.5">
+          <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 shadow-sm flex-shrink-0 mt-0.5">
             <CloudRain className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+              <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 AI Rainfall Dashboard
               </h2>
             </div>
-            <p className="text-xs md:text-sm text-slate-400 font-normal mt-0.5">
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-normal mt-0.5">
               Real-time & AI-Powered Rainfall Insights for {selectedDistrict.fullName}
             </p>
           </div>
@@ -144,16 +140,16 @@ export const AssamRainfallOverview = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0D1627] hover:bg-[#121E36] border border-slate-700/70 hover:border-blue-500/60 text-slate-200 text-xs md:text-sm font-semibold transition-all duration-200 shadow-sm"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/70 dark:bg-[#0D1627] dark:hover:bg-[#121E36] border border-slate-300/80 dark:border-slate-700/70 text-slate-800 dark:text-slate-200 text-xs md:text-sm font-semibold transition-all duration-200 shadow-sm"
             >
-              <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <span>{selectedDistrict.fullName}</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-64 max-h-80 overflow-y-auto rounded-xl bg-[#0D1627] border border-slate-700/80 shadow-2xl py-1.5 z-50 divide-y divide-slate-800/40">
-                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div className="absolute right-0 top-full mt-1.5 w-64 max-h-80 overflow-y-auto rounded-xl bg-white dark:bg-[#0D1627] border border-slate-200 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/40">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Select Assam District / Region (12 Total)
                 </div>
                 {ASSAM_DISTRICTS.map((district) => {
@@ -167,15 +163,15 @@ export const AssamRainfallOverview = () => {
                       }}
                       className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors ${
                         isSelected 
-                          ? 'bg-blue-600/20 text-blue-400 font-bold' 
-                          : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                          ? 'bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-bold' 
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <div>
                         <div className="font-semibold">{district.fullName}</div>
-                        <div className="text-[10px] text-slate-500">{district.district} • {district.basin}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-500">{district.district} • {district.basin}</div>
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 ml-2" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 ml-2" />}
                     </button>
                   );
                 })}
@@ -187,17 +183,17 @@ export const AssamRainfallOverview = () => {
           <button
             onClick={handleRefresh}
             title="Refresh live rainfall & re-run LSTM prediction"
-            className="p-2 rounded-xl bg-[#0D1627] hover:bg-[#121E36] border border-slate-700/70 text-slate-400 hover:text-white transition-all flex items-center justify-center"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/70 dark:bg-[#0D1627] dark:hover:bg-[#121E36] border border-slate-300/80 dark:border-slate-700/70 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center shadow-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600 dark:text-blue-400' : ''}`} />
           </button>
 
           {/* Last Updated Timestamp */}
           <div className="text-right pl-2 hidden sm:block">
-            <span className="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+            <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">
               Last Updated:
             </span>
-            <span className="text-xs text-slate-300 font-medium font-mono">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium font-mono">
               {formatTimestamp(lastRefreshed)}
             </span>
           </div>
@@ -210,17 +206,17 @@ export const AssamRainfallOverview = () => {
           ======================================================== */}
       <div className={`mt-5 p-3.5 md:p-4 rounded-xl border flex items-center gap-3.5 transition-all duration-300 ${
         isHighOrCritical
-          ? 'bg-rose-950/30 border-rose-900/60 text-rose-300'
+          ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-300'
           : isModerate
-          ? 'bg-amber-950/30 border-amber-900/60 text-amber-300'
-          : 'bg-[#091C1C]/70 border-emerald-900/50 text-emerald-300'
+          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-300'
+          : 'bg-emerald-50 dark:bg-[#091C1C]/70 border-emerald-200 dark:border-emerald-900/50 text-emerald-900 dark:text-emerald-300'
       }`}>
-        <div className={`p-2 rounded-lg ${
+        <div className={`p-2 rounded-lg flex-shrink-0 ${
           isHighOrCritical 
-            ? 'bg-rose-900/40 text-rose-400 border border-rose-700/40' 
+            ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-700/40' 
             : isModerate
-            ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40'
-            : 'bg-emerald-950/80 text-emerald-400 border border-emerald-700/40'
+            ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/40'
+            : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40'
         }`}>
           {isHighOrCritical ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
         </div>
@@ -229,12 +225,12 @@ export const AssamRainfallOverview = () => {
             <span className="font-black text-xs md:text-sm tracking-wide uppercase">
               {prediction.riskLevel}
             </span>
-            <span className="text-slate-500 text-xs">•</span>
-            <span className="font-bold text-xs md:text-sm tracking-wide text-white uppercase">
+            <span className="text-slate-400 dark:text-slate-500 text-xs">•</span>
+            <span className="font-bold text-xs md:text-sm tracking-wide text-slate-900 dark:text-white uppercase">
               {selectedDistrict.name}, ASSAM, INDIA
             </span>
           </div>
-          <p className="text-xs text-slate-300 font-normal mt-0.5 truncate md:whitespace-normal">
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-normal mt-0.5 truncate md:whitespace-normal">
             {prediction.riskMessage}
           </p>
         </div>
@@ -246,78 +242,78 @@ export const AssamRainfallOverview = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
         
         {/* CARD 1: CURRENT RAIN RATE (Live API) */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-teal-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-teal-500/50 transition-all duration-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-teal-400" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-400">
+              <Droplets className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-700 dark:text-teal-400">
                 Current Rain Rate
               </span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-teal-950/80 text-teal-300 border border-teal-800/60 text-[10px] font-mono font-bold tracking-wide">
+            <span className="px-2 py-0.5 rounded bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 text-[10px] font-mono font-bold tracking-wide">
               LIVE API
             </span>
           </div>
 
           <div className="my-4">
             <div className="flex items-baseline">
-              <span className="text-4xl md:text-5xl font-black text-white font-mono tracking-tight">
+              <span className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
                 {weather.current_rain_mm_h.toFixed(1) === '0.0' ? '0' : weather.current_rain_mm_h.toFixed(1)}
               </span>
-              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1.5 font-mono">
                 mm/h
               </span>
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 flex items-center gap-1.5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <span>Intensity:</span>
-            <span className="font-semibold text-slate-200">
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
               {weather.current_intensity}
             </span>
           </div>
         </div>
 
         {/* CARD 2: PREDICTED RAIN RATE (LSTM AI Model) */}
-        <div className="bg-[#0B1220] border border-purple-900/40 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-purple-500/50 transition-all duration-200">
+        <div className="bg-purple-50/40 dark:bg-[#0B1220] border border-purple-200/80 dark:border-purple-900/40 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-purple-500/50 transition-all duration-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-purple-400" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-400">
+              <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-400">
                 Predicted Rain Rate
               </span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-purple-950/90 text-purple-300 border border-purple-800/70 text-[10px] font-mono font-bold tracking-wide">
+            <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/70 text-[10px] font-mono font-bold tracking-wide">
               AI MODEL
             </span>
           </div>
 
           <div className="my-4">
             <div className="flex items-baseline">
-              <span className="text-4xl md:text-5xl font-black text-white font-mono tracking-tight">
+              <span className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
                 {prediction.predictedRainRate.toFixed(1)}
               </span>
-              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1.5 font-mono">
                 mm/h
               </span>
             </div>
-            <div className="text-xs text-slate-400 mt-1">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Prediction: {prediction.forecastHorizon}
             </div>
           </div>
 
           <div>
-            <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-900/30 text-purple-300 border border-purple-700/40">
+            <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/40">
               {prediction.predictionIntensity}
             </span>
           </div>
         </div>
 
         {/* CARD 3: TREND (Calculated from LSTM Sequence) */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-amber-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-amber-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+            <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">
               Trend
             </span>
           </div>
@@ -326,17 +322,17 @@ export const AssamRainfallOverview = () => {
             {/* Visual Vector Arrow */}
             <div className="my-1">
               {prediction.trend === 'Rising' ? (
-                <svg className="w-14 h-9 text-amber-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-14 h-9 text-amber-500 dark:text-amber-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M 4 24 L 20 18 L 36 22 L 52 6" />
                   <path d="M 40 6 L 52 6 L 52 18" />
                 </svg>
               ) : prediction.trend === 'Falling' ? (
-                <svg className="w-14 h-9 text-emerald-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-14 h-9 text-emerald-600 dark:text-emerald-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M 4 6 L 20 14 L 36 10 L 52 24" />
                   <path d="M 40 24 L 52 24 L 52 12" />
                 </svg>
               ) : (
-                <svg className="w-14 h-9 text-cyan-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-14 h-9 text-cyan-600 dark:text-cyan-400" viewBox="0 0 60 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M 4 15 L 52 15" />
                   <path d="M 42 7 L 52 15 L 42 23" />
                 </svg>
@@ -344,22 +340,22 @@ export const AssamRainfallOverview = () => {
             </div>
 
             <div className={`text-base font-bold mt-1 ${
-              prediction.trend === 'Rising' ? 'text-amber-400' : prediction.trend === 'Falling' ? 'text-emerald-400' : 'text-cyan-400'
+              prediction.trend === 'Rising' ? 'text-amber-600 dark:text-amber-400' : prediction.trend === 'Falling' ? 'text-emerald-600 dark:text-emerald-400' : 'text-cyan-600 dark:text-cyan-400'
             }`}>
               {prediction.trend}
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 text-center">
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
             {prediction.trendDescription}
           </div>
         </div>
 
         {/* CARD 4: RISK LEVEL */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-rose-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <Bell className="w-4 h-4 text-rose-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
+            <Bell className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400">
               Risk Level
             </span>
           </div>
@@ -367,18 +363,22 @@ export const AssamRainfallOverview = () => {
           <div className="my-2 flex flex-col items-center justify-center text-center">
             <div className="relative">
               <ShieldAlert className={`w-12 h-12 ${
-                isHighOrCritical ? 'text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : isModerate ? 'text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]' : 'text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                isHighOrCritical 
+                  ? 'text-rose-600 dark:text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]' 
+                  : isModerate 
+                  ? 'text-amber-600 dark:text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]' 
+                  : 'text-emerald-600 dark:text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.3)]'
               }`} />
             </div>
 
             <div className={`text-xl md:text-2xl font-black uppercase tracking-wider mt-1.5 ${
-              isHighOrCritical ? 'text-rose-500' : isModerate ? 'text-amber-500' : 'text-emerald-400'
+              isHighOrCritical ? 'text-rose-600 dark:text-rose-500' : isModerate ? 'text-amber-600 dark:text-amber-500' : 'text-emerald-600 dark:text-emerald-400'
             }`}>
               {prediction.riskLevel}
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 text-center font-medium">
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center font-medium">
             {prediction.riskAction}
           </div>
         </div>
@@ -391,97 +391,97 @@ export const AssamRainfallOverview = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         
         {/* CARD 5: 24H CUMULATIVE RAIN */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-cyan-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <Droplets className="w-4 h-4 text-cyan-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">
+            <Droplets className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
               24h Cumulative Rain
             </span>
           </div>
 
           <div className="my-3">
             <div className="flex items-baseline">
-              <span className="text-3xl md:text-4xl font-extrabold text-cyan-300 font-mono tracking-tight">
+              <span className="text-3xl md:text-4xl font-extrabold text-cyan-600 dark:text-cyan-300 font-mono tracking-tight">
                 {weather.rain_24h_mm.toFixed(1)}
               </span>
-              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1.5 font-mono">
                 mm
               </span>
             </div>
           </div>
 
           <div className="flex items-center justify-between text-xs pt-1">
-            <div className="text-slate-400">
-              Probability: <span className="font-bold text-cyan-400 font-mono">{weather.rain_prob_pct}%</span>
+            <div className="text-slate-500 dark:text-slate-400">
+              Probability: <span className="font-bold text-cyan-600 dark:text-cyan-400 font-mono">{weather.rain_prob_pct}%</span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-slate-800/90 text-cyan-300 border border-slate-700/80 text-[10px] font-mono font-bold">
+            <span className="px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800/90 text-cyan-800 dark:text-cyan-300 border border-slate-300/80 dark:border-slate-700/80 text-[10px] font-mono font-bold">
               API TOTAL
             </span>
           </div>
         </div>
 
         {/* CARD 6: TEMPERATURE */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-rose-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <Thermometer className="w-4 h-4 text-rose-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
+            <Thermometer className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400">
               Temperature
             </span>
           </div>
 
           <div className="my-3">
-            <div className="text-3xl md:text-4xl font-extrabold text-white font-mono tracking-tight">
+            <div className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
               {weather.temp_c.toFixed(1)}°C
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 pt-1">
-            Feels like: <span className="font-semibold text-slate-200 font-mono">{weather.feels_like_c.toFixed(1)}°C</span>
+          <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            Feels like: <span className="font-semibold text-slate-700 dark:text-slate-200 font-mono">{weather.feels_like_c.toFixed(1)}°C</span>
           </div>
         </div>
 
         {/* CARD 7: HUMIDITY */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-blue-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-blue-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <Droplets className="w-4 h-4 text-blue-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-400">
+            <Droplets className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
               Humidity
             </span>
           </div>
 
           <div className="my-3">
-            <div className="text-3xl md:text-4xl font-extrabold text-white font-mono tracking-tight">
+            <div className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
               {weather.humidity_pct}%
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 pt-1">
-            Dew Point: <span className="font-semibold text-slate-200 font-mono">{weather.dew_point_c.toFixed(1)}°C</span>
+          <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            Dew Point: <span className="font-semibold text-slate-700 dark:text-slate-200 font-mono">{weather.dew_point_c.toFixed(1)}°C</span>
           </div>
         </div>
 
         {/* CARD 8: WIND VELOCITY */}
-        <div className="bg-[#0B1220] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-200">
+        <div className="bg-slate-50/90 dark:bg-[#0B1220] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-amber-500/50 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-amber-400" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+            <Wind className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">
               Wind Velocity
             </span>
           </div>
 
           <div className="my-3">
             <div className="flex items-baseline">
-              <span className="text-3xl md:text-4xl font-extrabold text-amber-400 font-mono tracking-tight">
+              <span className="text-3xl md:text-4xl font-extrabold text-amber-600 dark:text-amber-400 font-mono tracking-tight">
                 {weather.wind_kmh.toFixed(1)}
               </span>
-              <span className="text-sm font-normal text-slate-400 ml-1.5 font-mono">
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1.5 font-mono">
                 km/h
               </span>
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 pt-1">
-            Pressure: <span className="font-semibold text-slate-200 font-mono">{weather.pressure_hpa} hPa</span>
+          <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            Pressure: <span className="font-semibold text-slate-700 dark:text-slate-200 font-mono">{weather.pressure_hpa} hPa</span>
           </div>
         </div>
 
@@ -490,17 +490,17 @@ export const AssamRainfallOverview = () => {
       {/* ========================================================
           5. 12-HOUR RAIN TELEMETRY FORECAST PANEL (LSTM OUTPUT)
           ======================================================== */}
-      <div className="mt-5 bg-[#0A101C] border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+      <div className="mt-5 bg-slate-50/90 dark:bg-[#0A101C] border border-slate-200/90 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm">
         
         {/* Forecast Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200/80 dark:border-slate-800/60">
           <div className="flex items-center gap-2">
-            <CloudRain className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white tracking-wide">
+            <CloudRain className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">
               12-Hour Rain Telemetry Forecast — {selectedDistrict.name}, Assam
             </h3>
           </div>
-          <div className="text-[11px] text-slate-400 font-mono">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
             Values in mm/h
           </div>
         </div>
@@ -511,7 +511,7 @@ export const AssamRainfallOverview = () => {
             const numVal = Number(val) || 0;
             const hourLabel = `+${idx + 1}h`;
             
-            // Calculate fill height percentage (max reference 25 mm/h)
+            // Calculate fill height percentage (max reference 20 mm/h)
             const maxRef = 20;
             const fillHeightPct = Math.min(100, Math.max(8, (numVal / maxRef) * 100));
 
@@ -521,18 +521,18 @@ export const AssamRainfallOverview = () => {
               <div key={idx} className="flex flex-col items-center">
                 
                 {/* Top Number */}
-                <div className="text-xs font-mono font-bold text-cyan-400 mb-1.5">
+                <div className="text-xs font-mono font-bold text-cyan-700 dark:text-cyan-400 mb-1.5">
                   {numVal.toFixed(1)}
                 </div>
 
                 {/* Vertical Gauge Container */}
-                <div className="w-full h-14 bg-[#0D1627] border border-slate-800/80 rounded-lg p-0.5 flex flex-col justify-end overflow-hidden relative shadow-inner">
+                <div className="w-full h-14 bg-slate-200/70 dark:bg-[#0D1627] border border-slate-300/80 dark:border-slate-800/80 rounded-lg p-0.5 flex flex-col justify-end overflow-hidden relative shadow-inner">
                   {/* Gauge Bar */}
                   <div 
                     className={`w-full rounded transition-all duration-500 ${
                       hasActiveRain 
-                        ? 'bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_10px_rgba(6,182,212,0.6)]' 
-                        : 'bg-slate-800/40'
+                        ? 'bg-gradient-to-t from-cyan-600 to-teal-500 dark:from-cyan-500 dark:to-teal-400 shadow-[0_0_10px_rgba(6,182,212,0.4)] dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]' 
+                        : 'bg-slate-300/60 dark:bg-slate-800/40'
                     }`}
                     style={{ 
                       height: hasActiveRain ? `${fillHeightPct}%` : '4px' 
@@ -541,7 +541,7 @@ export const AssamRainfallOverview = () => {
                 </div>
 
                 {/* Bottom Hour Label */}
-                <div className="text-[11px] font-mono text-slate-400 mt-1.5 font-medium">
+                <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
                   {hourLabel}
                 </div>
 
