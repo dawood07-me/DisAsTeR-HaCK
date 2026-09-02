@@ -113,7 +113,7 @@ const initialData = {
       priority: "Critical",
       message: "Mudslide trapped 6 family members inside house. Road blocked, electricity down!",
       people_count: 6,
-      image_url: "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80",
+      image_url: "/images/landslide.jpg",
       status: "Pending",
       assigned_to: null,
       created_at: new Date(Date.now() - 35 * 60000).toISOString()
@@ -130,7 +130,7 @@ const initialData = {
       priority: "High",
       message: "Severe storm surge destroyed roof. 4 adults and 2 elderly stranded on top floor.",
       people_count: 6,
-      image_url: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?auto=format&fit=crop&w=600&q=80",
+      image_url: "/images/cyclone.jpg",
       status: "Accepted",
       assigned_to: "NDRF Unit 7 Odisha",
       created_at: new Date(Date.now() - 90 * 60000).toISOString()
@@ -164,7 +164,7 @@ const initialData = {
       priority: "High",
       message: "High sea level anomaly alert. Fishermen colony evacuated to elevated hill, need medical team.",
       people_count: 25,
-      image_url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80",
+      image_url: "/images/tsunami.jpg",
       status: "Rescued",
       assigned_to: "Indian Coast Guard Emergency Unit",
       created_at: new Date(Date.now() - 300 * 60000).toISOString()

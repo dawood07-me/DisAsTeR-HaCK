@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DisasterProvider } from './context/DisasterContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { SOSModal } from './components/SOSModal';
@@ -162,7 +163,7 @@ const AppContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500 selection:text-white transition-colors duration-200">
       
       {/* Top Navigation Bar with Mobile Hamburger Menu Trigger */}
       <Navbar 
@@ -197,10 +198,12 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <DisasterProvider>
-        <AppContent />
-      </DisasterProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <DisasterProvider>
+          <AppContent />
+        </DisasterProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

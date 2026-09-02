@@ -416,46 +416,101 @@ app.get('/api/weather', (req, res) => {
 });
 
 
-// Healthcheck
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'online', service: 'RakshAI Natural Disaster Backend', timestamp: new Date().toISOString() });
+// /api/weather/assam - Dynamic Rainfall & Hydrological Telemetry for Assam, India
+const ASSAM_LOCATIONS = {
+  'guwahati': { name: 'Guwahati', district: 'Kamrup Metropolitan', lat: 26.1445, lng: 91.7362 },
+  'dibrugarh': { name: 'Dibrugarh', district: 'Dibrugarh', lat: 27.4728, lng: 94.9120 },
+  'silchar': { name: 'Silchar', district: 'Cachar (Barak Valley)', lat: 24.8333, lng: 92.7789 },
+  'jorhat': { name: 'Jorhat', district: 'Jorhat', lat: 26.7509, lng: 94.2037 },
+  'tezpur': { name: 'Tezpur', district: 'Sonitpur', lat: 26.6338, lng: 92.8000 },
+  'nagaon': { name: 'Nagaon', district: 'Nagaon', lat: 26.3463, lng: 92.6840 },
+  'tinsukia': { name: 'Tinsukia', district: 'Tinsukia', lat: 27.4922, lng: 95.3558 },
+  'dhubri': { name: 'Dhubri', district: 'Dhubri', lat: 26.0207, lng: 89.9749 },
+  'bongaigaon': { name: 'Bongaigaon', district: 'Bongaigaon', lat: 26.4789, lng: 90.5583 },
+  'north lakhimpur': { name: 'North Lakhimpur', district: 'Lakhimpur', lat: 27.2345, lng: 94.1062 },
+  'haflong': { name: 'Haflong', district: 'Dima Hasao', lat: 25.1667, lng: 93.0167 },
+  'barpeta': { name: 'Barpeta', district: 'Barpeta', lat: 26.3200, lng: 91.0000 }
+};
+
+app.get('/api/weather/assam', async (req, res) => {
+  try {
+    const locQuery = (req.query.location || 'guwahati').toLowerCase().trim();
+    let lat = parseFloat(req.query.lat);
+    let lng = parseFloat(req.query.lng);
+
+    let matchedLoc = Object.values(ASSAM_LOCATIONS).find(
+      l => l.name.toLowerCase() === locQuery || l.district.toLowerCase().includes(locQuery)
+    );
+    if (!matchedLoc) {
+      matchedLoc = ASSAM_LOCATIONS['guwahati'];
+    }
+
+    if (isNaN(lat) || isNaN(lng)) {
+      lat = matchedLoc.lat;
+      lng = matchedLoc.lng;
+    }
+
+    const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=precipitation,rain,relative_humidity_2m,temperature_2m&daily=precipitation_sum,rain_sum,precipitation_hours,precipitation_probability_max&timezone=Asia%2FKolkata`;
+    
+    const omRes = await fetch(openMeteoUrl);
+    if (!omRes.ok) {
+      throw new Error(`Open-Meteo returned status ${omRes.status}`);
+    }
+
+    const data = await omRes.json();
+    const current = data.current || {};
+    const daily = data.daily || {};
+    const hourly = data.hourly || {};
+
+    const rainMm = current.precipitation ?? current.rain ?? 0;
+    const rain24h = daily.precipitation_sum ? daily.precipitation_sum[0] : 0;
+    const rainProb = daily.precipitation_probability_max ? daily.precipitation_probability_max[0] : 75;
+
+    let warningLevel = 'GREEN / SAFE';
+    let warningMessage = 'Light precipitation recorded. Normal river discharge levels across district.';
+    if (rainMm > 15 || rain24h > 100) {
+      warningLevel = 'RED ALERT';
+      warningMessage = 'Heavy downpour leading to severe inundation & Brahmaputra basin surge warning.';
+    } else if (rainMm > 5 || rain24h > 40) {
+      warningLevel = 'ORANGE ALERT';
+      warningMessage = 'Moderate to heavy rainfall. Watch out for localized urban waterlogging & flash flooding.';
+    } else if (rainMm > 0 || rain24h > 10) {
+      warningLevel = 'YELLOW WATCH';
+      warningMessage = 'Light to moderate rainfall observed across district boundaries.';
+    }
+
+    res.json({
+      state: 'Assam',
+      country: 'India',
+      location: matchedLoc.name,
+      district: matchedLoc.district,
+      coordinates: { lat, lng },
+      rainfall: {
+        current_mm_h: Number(rainMm.toFixed(1)),
+        rain_24h_mm: Number(rain24h.toFixed(1)),
+        rain_probability_pct: rainProb,
+        precipitation_hours: daily.precipitation_hours ? daily.precipitation_hours[0] : 0,
+        intensity: rainMm > 15 ? 'Torrential Rain' : rainMm > 5 ? 'Heavy Downpour' : rainMm > 0 ? 'Moderate Rain' : 'Dry / Light Rain',
+        hourly_trend: (hourly.precipitation || []).slice(0, 12)
+      },
+      temperature_c: current.temperature_2m ?? 26.5,
+      humidity_pct: current.relative_humidity_2m ?? 85,
+      wind_speed_kmh: current.wind_speed_10m ?? 12.5,
+      pressure_hpa: current.surface_pressure ?? 1004,
+      warning_level: warningLevel,
+      warning_message: warningMessage,
+      updated_at: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Assam weather API error:', err);
+    res.status(500).json({ error: 'Failed to fetch dynamic weather data for Assam' });
+  }
 });
 
-
-app.get('/api/sos', (req, res) => {
-  res.json([]);
+app.get('/', (req, res) => {
+  res.send('RakshAI Backend Running 🚀');
 });
-
-app.get('/api/relief', (req, res) => {
-  res.json([]);
-});
-
-app.get('/api/missing', (req, res) => {
-  res.json([]);
-});
-
-app.get('/api/damage', (req, res) => {
-  res.json([]);
-});
-
-app.get('/api/shelters', (req, res) => {
-  res.json([]);
-});
-
-app.get('/api/weather', (req, res) => {
-  res.json([]);
-});
-
-app.get('/api/prediction', (req, res) => {
-  res.json([]);
-});
-
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-
-app.get("/", (req, res) => {
-  res.send("RakshAI Backend Running 🚀");
 });

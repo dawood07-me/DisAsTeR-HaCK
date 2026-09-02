@@ -22,15 +22,15 @@ export const RescuePage = () => {
     <div className="space-y-6">
       
       {/* Top Banner */}
-      <div className="glass-panel p-6 rounded-2xl border border-blue-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="glass-panel p-6 rounded-2xl border border-blue-200 dark:border-blue-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors duration-200">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-red-950 text-red-400 border border-red-800">
+            <div className="p-2 rounded-xl bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
               <LifeBuoy className="w-6 h-6 animate-spin" style={{ animationDuration: '8s' }} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-white">MODULE 4: RESCUE TEAM DISPATCH DASHBOARD</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-xl font-black text-slate-900 dark:text-white">MODULE 4: RESCUE TEAM DISPATCH DASHBOARD</h1>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Authorized Command Console for NDRF, SDRF, Army & Coast Guard Rescue Operations
               </p>
             </div>
@@ -38,7 +38,7 @@ export const RescuePage = () => {
         </div>
 
         {!isAuthorizedRole && (
-          <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-800/80 text-amber-300 text-xs font-semibold">
+          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 text-xs font-semibold">
             ⚠️ You are viewing as {user?.role || 'Citizen'}. Switch role to "Rescue Team" or "Govt Admin" in top bar to test dispatch controls.
           </div>
         )}
@@ -46,23 +46,23 @@ export const RescuePage = () => {
 
       {/* Map View */}
       <div className="space-y-2">
-        <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-          <Navigation className="w-4 h-4 text-cyan-400" /> Tactical Dispatch Map View
+        <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <Navigation className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> Tactical Dispatch Map View
         </h3>
         <IndiaMap height="400px" />
       </div>
 
       {/* Priority Filter Header */}
-      <div className="flex items-center justify-between glass-panel p-4 rounded-2xl border border-slate-800">
+      <div className="flex items-center justify-between glass-panel p-4 rounded-2xl border border-slate-200 dark:border-slate-800 transition-colors duration-200">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold text-slate-300 uppercase">Filter SOS Priority:</span>
+          <Filter className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Filter SOS Priority:</span>
           {['All', 'Critical', 'High', 'Medium', 'Low'].map(p => (
             <button
               key={p}
               onClick={() => setPriorityFilter(p)}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                priorityFilter === p ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white bg-slate-900/60'
+                priorityFilter === p ? 'bg-cyan-600 text-white' : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800'
               }`}
             >
               {p}
@@ -70,8 +70,8 @@ export const RescuePage = () => {
           ))}
         </div>
 
-        <div className="text-xs text-slate-400 font-mono">
-          Total SOS Cases: <b className="text-white">{filtered.length}</b>
+        <div className="text-xs text-slate-600 dark:text-slate-400 font-mono">
+          Total SOS Cases: <b className="text-slate-900 dark:text-white">{filtered.length}</b>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export const RescuePage = () => {
           <div 
             key={sos.id} 
             className={`glass-panel p-5 rounded-2xl border transition ${
-              sos.priority === 'Critical' ? 'border-red-900/60 bg-red-950/10' : 'border-slate-800'
+              sos.priority === 'Critical' ? 'border-red-300 dark:border-red-900/60 bg-red-50/50 dark:bg-red-950/10' : 'border-slate-200 dark:border-slate-800'
             }`}
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -89,24 +89,24 @@ export const RescuePage = () => {
               {/* SOS Info */}
               <div className="space-y-2 max-w-2xl">
                 <div className="flex items-center gap-3">
-                  <span className="font-black text-base text-cyan-400">{sos.id}</span>
-                  <span className="font-extrabold text-sm text-white">{sos.disaster_type}</span>
+                  <span className="font-black text-base text-cyan-700 dark:text-cyan-400">{sos.id}</span>
+                  <span className="font-extrabold text-sm text-slate-900 dark:text-white">{sos.disaster_type}</span>
                   <StatusBadge status={sos.priority} />
                   <StatusBadge status={sos.status} />
                 </div>
 
-                <div className="text-xs text-slate-300 font-medium">
-                  📍 <b className="text-slate-100">{sos.location}</b> • Victims Stranded: <b className="text-red-400">{sos.people_count}</b>
+                <div className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                  📍 <b className="text-slate-900 dark:text-slate-100">{sos.location}</b> • Victims Stranded: <b className="text-red-600 dark:text-red-400">{sos.people_count}</b>
                 </div>
 
-                <p className="text-xs text-slate-400 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100/90 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                   "{sos.message}"
                 </p>
 
-                <div className="flex items-center gap-4 text-[11px] text-slate-400">
-                  <span>Contact: <b className="text-slate-200">{sos.user_name} ({sos.phone})</b></span>
+                <div className="flex items-center gap-4 text-[11px] text-slate-600 dark:text-slate-400">
+                  <span>Contact: <b className="text-slate-800 dark:text-slate-200">{sos.user_name} ({sos.phone})</b></span>
                   {sos.assigned_to && (
-                    <span className="text-emerald-400 font-bold">⚡ Assigned: {sos.assigned_to}</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">⚡ Assigned: {sos.assigned_to}</span>
                   )}
                 </div>
               </div>
@@ -142,7 +142,7 @@ export const RescuePage = () => {
                 )}
 
                 {sos.status === 'Rescued' && (
-                  <div className="px-4 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 font-bold text-xs flex items-center justify-center gap-1">
+                  <div className="px-4 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-400 font-bold text-xs flex items-center justify-center gap-1">
                     <CheckCircle2 className="w-4 h-4" /> EVACUATION COMPLETE
                   </div>
                 )}

@@ -4,9 +4,18 @@
 
 @layer base {
   body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  html.dark body {
     background-color: #030712;
     color: #f3f4f6;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  html.light body {
+    background-color: #f8fafc;
+    color: #0f172a;
   }
 }
 
@@ -15,32 +24,55 @@
   width: 6px;
   height: 6px;
 }
-::-webkit-scrollbar-track {
+html.dark ::-webkit-scrollbar-track {
   background: #0b1329;
 }
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #0284c7;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
   background: #0284c7;
 }
 
 /* Custom Glassmorphism Styles */
-.glass-panel {
+html.dark .glass-panel {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+html.light .glass-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
 .glass-panel-hover {
   transition: all 0.25s ease-in-out;
 }
-.glass-panel-hover:hover {
+html.dark .glass-panel-hover:hover {
   background: rgba(30, 41, 59, 0.85);
   border-color: rgba(56, 189, 248, 0.3);
   box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.15);
+}
+html.light .glass-panel-hover:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .emergency-glow-red {
@@ -78,19 +110,35 @@
   animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
-/* Leaflet Map overrides for dark theme */
-.leaflet-container {
+/* Leaflet Map overrides */
+html.dark .leaflet-container {
   background-color: #0b132b !important;
   font-family: inherit !important;
   border-radius: 0.75rem;
 }
-.leaflet-popup-content-wrapper {
+html.dark .leaflet-popup-content-wrapper {
   background-color: #0f172a !important;
   color: #f8fafc !important;
   border: 1px solid rgba(56, 189, 248, 0.3) !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
 }
-.leaflet-popup-tip {
+html.dark .leaflet-popup-tip {
   background-color: #0f172a !important;
+}
+
+html.light .leaflet-container {
+  background-color: #e2e8f0 !important;
+  font-family: inherit !important;
+  border-radius: 0.75rem;
+}
+html.light .leaflet-popup-content-wrapper {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+html.light .leaflet-popup-tip {
+  background-color: #ffffff !important;
 }

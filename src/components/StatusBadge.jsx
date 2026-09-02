@@ -9,8 +9,8 @@ export const StatusBadge = ({ status, type = 'status' }) => {
       case 'Pending':
       case 'RED ALERT':
         return {
-          bg: 'bg-red-950/80 text-red-400 border-red-500/40',
-          icon: <AlertTriangle className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+          bg: 'bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40',
+          icon: <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400 animate-pulse" />
         };
       // High / Accepted / Request
       case 'High':
@@ -18,16 +18,16 @@ export const StatusBadge = ({ status, type = 'status' }) => {
       case 'ORANGE ALERT':
       case 'Request':
         return {
-          bg: 'bg-amber-950/80 text-amber-400 border-amber-500/40',
-          icon: <Clock className="w-3.5 h-3.5 text-amber-400" />
+          bg: 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 border-amber-300 dark:border-amber-500/40',
+          icon: <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
         };
       // On The Way / Delivering / Medium
       case 'On The Way':
       case 'Delivering':
       case 'Medium':
         return {
-          bg: 'bg-cyan-950/80 text-cyan-400 border-cyan-500/40',
-          icon: <Navigation className="w-3.5 h-3.5 text-cyan-400 animate-bounce" />
+          bg: 'bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-400 border-cyan-300 dark:border-cyan-500/40',
+          icon: <Navigation className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 animate-bounce" />
         };
       // Rescued / Delivered / Low / Match Found
       case 'Rescued':
@@ -36,17 +36,17 @@ export const StatusBadge = ({ status, type = 'status' }) => {
       case 'Match Found':
       case 'Active':
         return {
-          bg: 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40',
-          icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          bg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40',
+          icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
         };
       case 'Missing':
         return {
-          bg: 'bg-purple-950/80 text-purple-400 border-purple-500/40',
-          icon: <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
+          bg: 'bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-400 border-purple-300 dark:border-purple-500/40',
+          icon: <HelpCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
         };
       default:
         return {
-          bg: 'bg-slate-800 text-slate-300 border-slate-700',
+          bg: 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
           icon: <ShieldCheck className="w-3.5 h-3.5" />
         };
     }

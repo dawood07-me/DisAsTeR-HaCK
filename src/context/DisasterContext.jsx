@@ -45,7 +45,21 @@ export const DisasterProvider = ({ children }) => {
         fetch(`${API_BASE}/api/weather`)
       ]);
 
-      if (sosRes.status === 'fulfilled' && sosRes.value.ok) setSosRequests(await sosRes.value.json());
+      // Override remote image URLs with local user-provided disaster images
+      const DISASTER_IMAGE_OVERRIDES = {
+        'Landslides': '/images/landslide.jpg',
+        'Cyclones': '/images/cyclone.jpg',
+        'Tsunami': '/images/tsunami.jpg',
+      };
+
+      if (sosRes.status === 'fulfilled' && sosRes.value.ok) {
+        const sosData = await sosRes.value.json();
+        const overriddenSos = sosData.map(sos => ({
+          ...sos,
+          image_url: DISASTER_IMAGE_OVERRIDES[sos.disaster_type] || sos.image_url
+        }));
+        setSosRequests(overriddenSos);
+      }
       if (relRes.status === 'fulfilled' && relRes.value.ok) setReliefRequests(await relRes.value.json());
       if (misRes.status === 'fulfilled' && misRes.value.ok) setMissingPersons(await misRes.value.json());
       if (dmgRes.status === 'fulfilled' && dmgRes.value.ok) setDamageReports(await dmgRes.value.json());
@@ -103,7 +117,7 @@ export const DisasterProvider = ({ children }) => {
         priority: sosData.priority || 'High',
         message: sosData.message,
         people_count: Number(sosData.people_count) || 1,
-        image_url: sosData.image_url || 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80',
+        image_url: sosData.image_url || '/images/landslide.jpg',
         status: 'Pending',
         assigned_to: null,
         created_at: new Date().toISOString()
@@ -275,7 +289,7 @@ export const DisasterProvider = ({ children }) => {
         location: data.location,
         damage_level: lvl,
         structural_risk: lvl === 'High' ? 'Critical Structural Failure' : lvl === 'Medium' ? 'Moderate Risk' : 'Minor Clearance Needed',
-        image_url: data.image_url || 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=600&q=80',
+        image_url: data.image_url || '/images/landslide.jpg',
         summary: `Simulated AI Vision: ${lvl} severity structural impact detected at ${data.location}. Recovery dispatch requested.`,
         created_at: new Date().toISOString()
       };
