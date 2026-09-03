@@ -7,7 +7,7 @@ if (typeof window !== 'undefined') {
 }
 import 'leaflet.heat';
 import { useDisaster } from '../context/DisasterContext';
-import { Layers, ShieldAlert, CheckSquare, Square, RefreshCw } from 'lucide-react';
+import { Layers, ShieldAlert, CheckSquare, Square, RefreshCw, X, ChevronDown } from 'lucide-react';
 
 // ─── 35+ GEOGRAPHICALLY DISTRIBUTED TELEMETRY COORDINATES ACROSS INDIA ───
 const INDIA_RAINFALL_HEATMAP_GRID = [
@@ -79,6 +79,8 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
   const [showShelters, setShowShelters] = useState(true);
   const [showNdrf, setShowNdrf] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   // Live telemetry state
   const [heatmapPoints, setHeatmapPoints] = useState([]);
@@ -464,58 +466,96 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
   return (
     <div className="relative isolate w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm z-0">
       
-      {/* ─── TOP RIGHT TILE STYLE CONTROLS ────────────────────────────── */}
-      <div className="absolute top-3 right-3 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-1.5 rounded-xl shadow-md flex items-center gap-1">
-        <div className="flex items-center gap-1 px-2 text-xs font-bold text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
-          <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
-          <span className="hidden sm:inline">Tiles:</span>
+      {/* ─── TOP RIGHT UNIFIED MAP CONTROLS ────────────────────────────── */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 flex-wrap justify-end pointer-events-auto">
+        
+        {/* BASE TILE SELECTOR PILL */}
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-1 rounded-xl shadow-md flex items-center gap-0.5">
+          <button
+            onClick={() => setMapStyle('roadmap')}
+            className={`px-2 py-1 rounded-lg transition text-[11px] font-bold ${
+              mapStyle === 'roadmap'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Standard
+          </button>
+
+          <button
+            onClick={() => setMapStyle('satellite')}
+            className={`px-2 py-1 rounded-lg transition text-[11px] font-bold ${
+              mapStyle === 'satellite'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Satellite
+          </button>
+
+          <button
+            onClick={() => setMapStyle('terrain')}
+            className={`px-2 py-1 rounded-lg transition text-[11px] font-bold ${
+              mapStyle === 'terrain'
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Terrain
+          </button>
         </div>
 
+        {/* MAP LAYERS TOGGLE BUTTON */}
         <button
-          onClick={() => setMapStyle('roadmap')}
-          className={`px-2.5 py-1 rounded-lg transition text-[11px] font-bold ${
-            mapStyle === 'roadmap'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          onClick={() => setLayersOpen(!layersOpen)}
+          className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shadow-md backdrop-blur-md ${
+            layersOpen
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
+          title="Toggle Visible Map Layers"
         >
-          Google Standard
+          <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
+          <span className="hidden sm:inline">Layers</span>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+            layersOpen ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-cyan-400'
+          }`}>
+            {[showDisaster, showShelters, showNdrf, showHeatmap].filter(Boolean).length}
+          </span>
+          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${layersOpen ? 'rotate-180' : ''}`} />
         </button>
 
-        <button
-          onClick={() => setMapStyle('satellite')}
-          className={`px-2.5 py-1 rounded-lg transition text-[11px] font-bold ${
-            mapStyle === 'satellite'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Satellite Hybrid
-        </button>
-
-        <button
-          onClick={() => setMapStyle('terrain')}
-          className={`px-2.5 py-1 rounded-lg transition text-[11px] font-bold ${
-            mapStyle === 'terrain'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Terrain
-        </button>
+        {/* RAINFALL LEGEND TOGGLE BUTTON */}
+        {showHeatmap && (
+          <button
+            onClick={() => setLegendOpen(!legendOpen)}
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shadow-md backdrop-blur-md ${
+              legendOpen
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+            title="Toggle Rainfall Intensity Legend"
+          >
+            <span>🌈</span>
+            <span className="hidden sm:inline">Legend</span>
+          </button>
+        )}
       </div>
 
-      {/* ─── LEAFLET MAP TARGET CONTAINER ──────────────────────────────── */}
-      <div ref={mapContainerRef} style={{ height }} className="w-full z-10" />
-
-      {/* ─── RIGHT OVERLAY: MAP LAYER TOGGLES & HEATMAP LEGEND ─────────── */}
-      <div className="absolute top-16 right-3 z-20 flex flex-col gap-2.5 max-w-[260px] sm:max-w-xs pointer-events-auto">
-        
-        {/* MAP LAYERS TOGGLE BOX */}
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-xl text-xs space-y-2">
-          <div className="font-extrabold text-[10px] text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1 flex items-center justify-between">
-            <span>Map Layers</span>
-            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
+      {/* ─── FLOATING MAP LAYERS DROPDOWN POPOVER ────────────────────────── */}
+      {layersOpen && (
+        <div className="absolute top-14 right-3 z-30 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3.5 rounded-2xl shadow-2xl text-xs space-y-2.5 animate-in fade-in zoom-in-95 duration-150 pointer-events-auto">
+          <div className="font-extrabold text-[10px] text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-slate-800">
+            <span className="flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
+              Active Map Layers
+            </span>
+            <button
+              onClick={() => setLayersOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <label className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold cursor-pointer hover:opacity-80 transition select-none">
@@ -526,7 +566,7 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span className="w-4 h-4 rounded-full bg-slate-900 border border-red-500 flex items-center justify-center text-[9px] shrink-0">🌊</span>
-            <span className="text-[11px]">Active Disaster (Round Logo)</span>
+            <span className="text-[11px]">Active Disaster Icons</span>
           </label>
 
           <label className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold cursor-pointer hover:opacity-80 transition select-none">
@@ -537,7 +577,7 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-[9px] text-white shrink-0">🏠</span>
-            <span className="text-[11px]">Shelter Hub Pin</span>
+            <span className="text-[11px]">Shelter Hub Pins</span>
           </label>
 
           <label className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold cursor-pointer hover:opacity-80 transition select-none">
@@ -548,7 +588,7 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] text-white shrink-0">⚡</span>
-            <span className="text-[11px]">NDRF Rescue Base</span>
+            <span className="text-[11px]">NDRF Rescue Bases</span>
           </label>
 
           <label className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold cursor-pointer hover:opacity-80 transition select-none pt-1 border-t border-slate-200 dark:border-slate-800">
@@ -559,37 +599,62 @@ export const IndiaMap = ({ height = '540px', filterType = 'All' }) => {
               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span className="w-4 h-4 rounded bg-gradient-to-tr from-blue-500 via-amber-400 to-red-500 flex items-center justify-center text-[9px] text-white shrink-0">🌈</span>
-            <span className="text-[11px] text-blue-600 dark:text-cyan-400">Rainfall Heatmap</span>
+            <span className="text-[11px] text-blue-600 dark:text-cyan-400">Rainfall Heatmap Overlay</span>
           </label>
         </div>
+      )}
 
-        {/* RAINFALL INTENSITY LEGEND (Matching reference image) */}
-        {showHeatmap && (
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-xl text-xs space-y-2 animate-in fade-in duration-300">
-            <div className="font-extrabold text-[10px] uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              RAINFALL INTENSITY (mm)
+      {/* ─── LEAFLET MAP TARGET CONTAINER ──────────────────────────────── */}
+      <div ref={mapContainerRef} style={{ height }} className="w-full z-10" />
+
+      {/* ─── BOTTOM LEFT: RAINFALL INTENSITY LEGEND DOCK ─────────────────── */}
+      {showHeatmap && (
+        <div className="absolute bottom-3 left-3 sm:left-4 z-20 pointer-events-auto max-w-[270px] sm:max-w-xs">
+          {legendOpen ? (
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-xl text-xs space-y-2 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Rainfall Intensity (mm)
+                </span>
+                <button
+                  onClick={() => setLegendOpen(false)}
+                  className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  title="Minimize Legend"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Continuous Color Gradient Bar */}
+              <div className="w-full h-3 rounded-md bg-gradient-to-r from-blue-500 via-cyan-400 via-emerald-400 via-yellow-400 via-orange-500 to-red-600 shadow-inner" />
+
+              {/* Gradient Value Scale Labels */}
+              <div className="grid grid-cols-5 text-[8.5px] font-extrabold text-slate-600 dark:text-slate-300 text-center leading-tight">
+                <div>Very Low<br /><span className="text-slate-400 font-normal">(&lt;2.5)</span></div>
+                <div>Low<br /><span className="text-slate-400 font-normal">(2.5-15)</span></div>
+                <div>Mod<br /><span className="text-slate-400 font-normal">(15-35)</span></div>
+                <div>Heavy<br /><span className="text-slate-400 font-normal">(35-75)</span></div>
+                <div>V. Heavy<br /><span className="text-slate-400 font-normal">(&gt;75)</span></div>
+              </div>
+
+              <div className="pt-1 border-t border-slate-200 dark:border-slate-800 text-[8.5px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <span>Open-Meteo Telemetry</span>
+                {lastUpdatedTime && <span className="font-mono">{lastUpdatedTime}</span>}
+              </div>
             </div>
-
-            {/* Continuous Color Gradient Bar */}
-            <div className="w-full h-3.5 rounded-md bg-gradient-to-r from-blue-500 via-cyan-400 via-emerald-400 via-yellow-400 via-orange-500 to-red-600 shadow-inner" />
-
-            {/* Gradient Value Scale Labels */}
-            <div className="grid grid-cols-5 text-[9px] font-extrabold text-slate-600 dark:text-slate-300 text-center leading-tight">
-              <div>Very Low<br /><span className="text-slate-400 font-normal">(&lt;2.5)</span></div>
-              <div>Low<br /><span className="text-slate-400 font-normal">(2.5 - 15)</span></div>
-              <div>Mod<br /><span className="text-slate-400 font-normal">(15 - 35)</span></div>
-              <div>Heavy<br /><span className="text-slate-400 font-normal">(35 - 75)</span></div>
-              <div>V. Heavy<br /><span className="text-slate-400 font-normal">(&gt;75)</span></div>
-            </div>
-
-            <div className="pt-1 border-t border-slate-200 dark:border-slate-800 text-[9px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-              <span>Source: Open-Meteo | Rainfall (mm)</span>
-              {lastUpdatedTime && <span className="font-mono">{lastUpdatedTime}</span>}
-            </div>
-          </div>
-        )}
-
-      </div>
+          ) : (
+            /* COLLAPSED MINI PILL */
+            <button
+              onClick={() => setLegendOpen(true)}
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl shadow-md text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              title="Expand Rainfall Intensity Legend"
+            >
+              <span>🌈</span>
+              <span>Rainfall Legend</span>
+            </button>
+          )}
+        </div>
+      )}
 
     </div>
   );
